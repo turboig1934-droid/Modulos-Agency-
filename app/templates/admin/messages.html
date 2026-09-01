@@ -1,0 +1,324 @@
+{% extends "admin/base.html" %}
+
+{% block page_title %}Messages{% endblock %}
+
+{% block content %}
+<div class="admin-card">
+    <div class="admin-card-header">
+        <h3>📧 All Messages</h3>
+        <div>
+            <span style="color:#3d5f85; margin-right:15px;">Total: {{ messages|length if messages else 0 }}</span>
+            {% if messages %}
+                <button onclick="markAllRead()" class="btn-sm btn-sm-success" style="padding:8px 16px; margin-right:8px;">Mark All Read</button>
+                <button onclick="deleteAllMessages()" class="btn-sm btn-sm-danger" style="padding:8px 16px;">Delete All</button>
+            {% endif %}
+        </div>
+    </div>
+    <table class="admin-table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Subject</th>
+                <th>Message</th>
+                <th>Status</th>
+                <th>Date</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if messages %}
+                {% for msg in messages %}
+                <tr>
+                    <td><strong>{{ msg.name }}</strong></td>
+                    <td>{{ msg.email }}</td>
+                    <td>{{ msg.subject or 'No Subject' }}</td>
+                    <td style="max-width:120px; word-wrap:break-word;">{{ msg.message[:30] }}{% if msg.message|length > 30 %}...{% endif %}</td>
+                    <td>
+                        {% if msg.is_read %}
+                            <span style="color:green;">✅ Read</span>
+                        {% else %}
+                            <span style="color:red;">🔴 Unread</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ msg.created_at.strftime('%d/%m/%Y %H:%M') }}</td>
+                    <td>
+                        <button onclick="viewMessage({{ msg.id }})" class="btn-sm btn-sm-info">View</button>
+                        {% if not msg.is_read %}
+                            <button onclick="markRead({{ msg.id }})" class="btn-sm btn-sm-success">Mark Read</button>
+                        {% endif %}
+                        <button onclick="deleteMessage({{ msg.id }})" class="btn-sm btn-sm-danger">Delete</button>
+                    </td>
+                </tr>
+                {% endfor %}
+            {% else %}
+                <tr>
+                    <td colspan="7" style="text-align:center; padding:40px; color:#8a9bb5;">
+                        <i class="fas fa-inbox" style="font-size:40px; display:block; margin-bottom:10px;"></i>
+                        No messages yet. Users will appear here when they contact you.
+                    </td>
+                </tr>
+            {% endif %}
+        </tbody>
+    </table>
+</div>
+
+<!-- ===== MESSAGE DETAIL MODAL ===== -->
+<div id="messageModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; justify-content:center; align-items:center;">
+    <div style="background:white; max-width:700px; width:95%; padding:30px; border-radius:16px; box-shadow:0 20px 60px rgba(0,0,0,0.2); max-height:90vh; overflow-y:auto;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; border-bottom:2px solid #e6f0ff; padding-bottom:15px;">
+            <h2 style="color:#0a3b6b; margin:0;">
+                <i class="fas fa-envelope" style="color:#0070e0;"></i> Message Details
+            </h2>
+            <button onclick="closeModal()" style="background:none; border:none; font-size:28px; cursor:pointer; color:#8a9bb5; line-height:1;">&times;</button>
+        </div>
+        
+        <div id="messageContent">
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:15px;">
+                <div>
+                    <strong style="color:#0a3b6b;">From:</strong>
+                    <p id="detailName" style="color:#1f3a5f; margin:4px 0;"></p>
+                </div>
+                <div>
+                    <strong style="color:#0a3b6b;">Email:</strong>
+                    <p id="detailEmail" style="color:#1f3a5f; margin:4px 0;"></p>
+                </div>
+            </div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:15px;">
+                <div>
+                    <strong style="color:#0a3b6b;">Subject:</strong>
+                    <p id="detailSubject" style="color:#1f3a5f; margin:4px 0;"></p>
+                </div>
+                <div>
+                    <strong style="color:#0a3b6b;">Date:</strong>
+                    <p id="detailDate" style="color:#1f3a5f; margin:4px 0;"></p>
+                </div>
+            </div>
+            <div style="margin-bottom:15px;">
+                <strong style="color:#0a3b6b;">Status:</strong>
+                <span id="detailStatus" style="margin-left:10px;"></span>
+            </div>
+            <hr style="border-color:#e6f0ff; margin:15px 0;">
+            <div>
+                <strong style="color:#0a3b6b; font-size:16px;">Message:</strong>
+                <div id="detailMessage" style="background:#f8faff; padding:20px; border-radius:12px; border-left:4px solid #0070e0; margin-top:10px; white-space:pre-wrap; word-wrap:break-word; color:#1f3a5f; line-height:1.8; min-height:80px;"></div>
+            </div>
+        </div>
+        
+        <div style="margin-top:20px; display:flex; gap:12px; justify-content:flex-end; border-top:1px solid #e6f0ff; padding-top:20px;">
+            <button onclick="closeModal()" class="btn-secondary" style="padding:10px 24px; border:none; border-radius:30px; background:#e6f0ff; color:#0a3b6b; cursor:pointer; font-weight:600;">Close</button>
+            <button id="modalDeleteBtn" onclick="deleteFromModal()" class="btn-sm btn-sm-danger" style="padding:10px 24px;">Delete</button>
+            <button id="modalMarkReadBtn" onclick="markReadFromModal()" class="btn-sm btn-sm-success" style="padding:10px 24px;">Mark as Read</button>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentMessageId = null;
+
+function viewMessage(id) {
+    currentMessageId = id;
+    fetch(`/admin/messages/${id}`)
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('detailName').textContent = data.name;
+            document.getElementById('detailEmail').textContent = data.email;
+            document.getElementById('detailSubject').textContent = data.subject || 'No Subject';
+            document.getElementById('detailDate').textContent = data.created_at;
+            
+            const statusSpan = document.getElementById('detailStatus');
+            if (data.is_read) {
+                statusSpan.innerHTML = '<span style="color:green;">✅ Read</span>';
+            } else {
+                statusSpan.innerHTML = '<span style="color:red;">🔴 Unread</span>';
+            }
+            
+            document.getElementById('detailMessage').textContent = data.message || 'No message content.';
+            document.getElementById('messageModal').style.display = 'flex';
+            
+            // Show/hide mark read button
+            const markBtn = document.getElementById('modalMarkReadBtn');
+            if (data.is_read) {
+                markBtn.style.display = 'none';
+            } else {
+                markBtn.style.display = 'inline-block';
+            }
+        })
+        .catch(error => console.error('Error:', error));
+}
+
+function closeModal() {
+    document.getElementById('messageModal').style.display = 'none';
+    currentMessageId = null;
+}
+
+function markReadFromModal() {
+    if (!currentMessageId) return;
+    fetch(`/admin/messages/${currentMessageId}/read`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        }
+    });
+}
+
+function deleteFromModal() {
+    if (!currentMessageId) return;
+    if (!confirm('Delete this message?')) return;
+    fetch(`/admin/messages/${currentMessageId}/delete`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        }
+    });
+}
+
+function markRead(id) {
+    fetch(`/admin/messages/${id}/read`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) location.reload();
+    });
+}
+
+function deleteMessage(id) {
+    if (!confirm('Delete this message?')) return;
+    fetch(`/admin/messages/${id}/delete`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) location.reload();
+    });
+}
+
+function deleteAllMessages() {
+    if (!confirm('Delete ALL messages? This cannot be undone!')) return;
+    fetch(`/admin/messages/delete-all`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) location.reload();
+    });
+}
+
+function markAllRead() {
+    if (!confirm('Mark all messages as read?')) return;
+    fetch(`/admin/messages/mark-all-read`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) location.reload();
+    });
+}
+
+// Close modal on outside click
+document.getElementById('messageModal').addEventListener('click', function(e) {
+    if (e.target === this) closeModal();
+});
+
+// Close on ESC key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeModal();
+});
+</script>
+
+<style>
+.admin-card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    overflow: hidden;
+}
+.admin-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+    border-bottom: 1px solid #e6f0ff;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+.admin-card-header h3 {
+    color: #0a3b6b;
+    margin: 0;
+}
+.admin-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+}
+.admin-table th {
+    background: #f8faff;
+    padding: 12px 15px;
+    text-align: left;
+    font-weight: 600;
+    color: #3d5f85;
+    border-bottom: 2px solid #e6f0ff;
+}
+.admin-table td {
+    padding: 12px 15px;
+    border-bottom: 1px solid #f0f4ff;
+    color: #1f3a5f;
+    vertical-align: middle;
+}
+.admin-table tr:hover {
+    background: #f8faff;
+}
+.btn-sm {
+    padding: 4px 12px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 600;
+    transition: 0.2s;
+    text-decoration: none;
+    display: inline-block;
+}
+.btn-sm-success {
+    background: #28a745;
+    color: white;
+}
+.btn-sm-success:hover {
+    background: #1e7e34;
+}
+.btn-sm-danger {
+    background: #dc3545;
+    color: white;
+}
+.btn-sm-danger:hover {
+    background: #bd2130;
+}
+.btn-sm-info {
+    background: #17a2b8;
+    color: white;
+}
+.btn-sm-info:hover {
+    background: #138496;
+}
+.btn-sm-warning {
+    background: #ffc107;
+    color: #212529;
+}
+.btn-sm-warning:hover {
+    background: #e0a800;
+}
+</style>
+{% endblock %}

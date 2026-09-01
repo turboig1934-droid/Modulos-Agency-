@@ -1,0 +1,73 @@
+{% extends "admin/base.html" %}
+
+{% block page_title %}Add New Ad{% endblock %}
+
+{% block content %}
+<div class="admin-card">
+    <div class="admin-card-header">
+        <h3>Add New Advertisement</h3>
+        <a href="{{ url_for('admin.ads') }}" class="btn-secondary" style="padding:6px 16px; text-decoration:none;">← Back</a>
+    </div>
+    <div style="padding:20px; max-width:600px;">
+        <form method="POST">
+            <div class="form-group">
+                <label>Ad Title</label>
+                <input type="text" name="title" placeholder="e.g. Summer Sale" required style="width:100%; padding:10px; border:2px solid #d6e5ff; border-radius:8px;">
+            </div>
+            <div class="form-group">
+                <label>Image URL</label>
+                <input type="url" name="image_url" placeholder="https://example.com/ad-image.png" required style="width:100%; padding:10px; border:2px solid #d6e5ff; border-radius:8px;">
+                <p style="font-size:12px; color:#8a9bb5;">Use image URL (recommended size depends on ad size selected)</p>
+            </div>
+            <div class="form-group">
+                <label>Click URL</label>
+                <input type="url" name="click_url" placeholder="https://example.com/offer" required style="width:100%; padding:10px; border:2px solid #d6e5ff; border-radius:8px;">
+            </div>
+            
+            <div class="form-group">
+                <label>Ad Size</label>
+                <select name="ad_size" required style="width:100%; padding:10px; border:2px solid #d6e5ff; border-radius:8px;">
+                    <optgroup label="Common Sizes">
+                        <option value="728x90">728x90 - Leaderboard</option>
+                        <option value="970x250">970x250 - Billboard</option>
+                        <option value="336x280">336x280 - Large Rectangle</option>
+                        <option value="300x250">300x250 - Medium Rectangle</option>
+                        <option value="160x600">160x600 - Wide Skyscraper</option>
+                    </optgroup>
+                </select>
+                <p style="font-size:12px; color:#8a9bb5; margin-top:4px;">
+                    <strong>Sizes:</strong> 728x90 (Banner), 970x250 (Billboard), 336x280 (Rectangle), 300x250 (Medium), 160x600 (Skyscraper)
+                </p>
+            </div>
+            
+            <div class="form-group">
+                <label>Placement</label>
+                <select name="placement" required style="width:100%; padding:10px; border:2px solid #d6e5ff; border-radius:8px;">
+                    <option value="banner">Banner</option>
+                    <option value="sidebar">Sidebar</option>
+                    <option value="billboard">Billboard</option>
+                    <option value="popup">Popup</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" name="is_popup"> Show as Popup (half-screen overlay)
+                </label>
+                <p style="font-size:12px; color:#8a9bb5; margin-top:4px;">Popup appears after 2 seconds on homepage</p>
+            </div>
+            
+            <div class="form-group">
+                <label>Duration (hours)</label>
+                <input type="number" name="hours" value="24" min="1" required style="width:100%; padding:10px; border:2px solid #d6e5ff; border-radius:8px;">
+                <p style="font-size:12px; color:#8a9bb5;">Ad will auto-expire after this many hours</p>
+            </div>
+            
+            <div style="display:flex; gap:10px; margin-top:10px;">
+                <button type="submit" class="btn-primary">Add Ad</button>
+                <a href="{{ url_for('admin.ads') }}" class="btn-secondary" style="padding:10px 24px; text-decoration:none;">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

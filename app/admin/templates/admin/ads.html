@@ -1,0 +1,138 @@
+{% extends "admin/base.html" %}
+
+{% block page_title %}Ads Management{% endblock %}
+
+{% block content %}
+<div class="admin-card">
+    <div class="admin-card-header">
+        <h3>All Ads</h3>
+        <a href="{{ url_for('admin.add_ad') }}" class="btn-primary" style="padding:6px 16px; font-size:13px;">+ Add New Ad</a>
+    </div>
+    
+    {% if ads %}
+    <div style="overflow-x:auto;">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Size</th>
+                    <th>Placement</th>
+                    <th>Popup</th>
+                    <th>Image</th>
+                    <th>Status</th>
+                    <th>Views</th>
+                    <th>Clicks</th>
+                    <th>Expires</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for ad in ads %}
+                <tr>
+                    <td><strong>{{ ad.title }}</strong></td>
+                    <td><span style="background:#f0f6ff; padding:2px 8px; border-radius:4px; font-size:11px;">{{ ad.ad_size }}</span></td>
+                    <td><span style="background:#e6f0ff; padding:2px 8px; border-radius:4px; font-size:11px;">{{ ad.placement }}</span></td>
+                    <td>{% if ad.is_popup %}✅{% else %}—{% endif %}</td>
+                    <td><img src="{{ ad.image_url }}" alt="{{ ad.title }}" style="max-width:60px; max-height:35px; border-radius:4px; object-fit:cover;"></td>
+                    <td>
+                        {% if ad.is_visible() %}
+                            <span style="color:green; font-weight:600;">✅ Active</span>
+                        {% elif ad.is_expired() %}
+                            <span style="color:orange; font-weight:600;">⏰ Expired</span>
+                        {% else %}
+                            <span style="color:red; font-weight:600;">❌ Inactive</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ ad.views }}</td>
+                    <td>{{ ad.clicks }}</td>
+                    <td style="font-size:12px;">{{ ad.expires_at.strftime('%d/%m/%Y %H:%M') if ad.expires_at else 'Never' }}</td>
+                    <td>
+                        <div style="display:flex; gap:4px; flex-wrap:wrap;">
+                            <button onclick="toggleAd({{ ad.id }})" class="btn-sm btn-sm-warning">Toggle</button>
+                            <button onclick="deleteAd({{ ad.id }})" class="btn-sm btn-sm-danger">Delete</button>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+        <p style="text-align:center; padding:40px; color:#8a9bb5;">
+            <i class="fas fa-ad" style="font-size:40px; display:block; margin-bottom:10px;"></i>
+            No ads yet. Add your first ad!
+        </p>
+    {% endif %}
+</div>
+
+<script>
+function toggleAd(id) {
+    if (!confirm('Toggle this ad?')) return;
+    fetch(`/admin/ads/${id}/toggle`, { 
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+    })
+    .then(response => response.json())
+    .then(data => { 
+        if (data.success) location.reload(); 
+    })
+    .catch(error => console.error('Error:', error));
+}
+
+function deleteAd(id) {
+    if (!confirm('Delete this ad?')) return;
+    fetch(`/admin/ads/${id}/delete`, { 
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+    })
+    .then(response => response.json())
+    .then(data => { 
+        if (data.success) location.reload(); 
+    })
+    .catch(error => console.error('Error:', error));
+}
+</script>
+
+<style>
+.admin-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+.admin-table th {
+    background: #f0f4ff;
+    padding: 10px 12px;
+    text-align: left;
+    font-weight: 600;
+    color: #3d5f85;
+    border-bottom: 2px solid #e6f0ff;
+    white-space: nowrap;
+}
+.admin-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid #f0f4ff;
+    color: #1f3a5f;
+    vertical-align: middle;
+}
+.admin-table tr:hover {
+    background: #f8faff;
+}
+.btn-sm {
+    padding: 4px 10px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 11px;
+    font-weight: 600;
+    transition: 0.2s;
+}
+.btn-sm-success { background: #28a745; color: white; }
+.btn-sm-success:hover { background: #1e7e34; }
+.btn-sm-danger { background: #dc3545; color: white; }
+.btn-sm-danger:hover { background: #bd2130; }
+.btn-sm-warning { background: #ffc107; color: #212529; }
+.btn-sm-warning:hover { background: #e0a800; }
+.btn-sm-info { background: #17a2b8; color: white; }
+.btn-sm-info:hover { background: #138496; }
+</style>
+{% endblock %}

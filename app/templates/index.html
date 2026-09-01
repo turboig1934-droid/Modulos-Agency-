@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+
+{% block title %}Modulos Agency - Build. Scale. Dominate.{% endblock %}
+
+{% block content %}
+<!-- HERO SECTION (Deep Blue Background) -->
+<section class="hero" style="background-color: #0047BB; color: #ffffff; padding: 80px 0; text-align: center; position: relative; overflow: hidden; min-height: 80vh; display: flex; align-items: center;">
+    <!-- Optional: Subtle 3D ribbon effect background using CSS -->
+    <div style="position: absolute; top: -50px; right: -50px; width: 300px; height: 300px; background: rgba(255,255,255,0.05); border-radius: 50%;"></div>
+    <div style="position: absolute; bottom: -50px; left: -50px; width: 300px; height: 300px; background: rgba(255,255,255,0.05); border-radius: 50%;"></div>
+
+    <div class="container" style="max-width: 1200px; margin: 0 auto; padding: 0 20px; position: relative; z-index: 2; width: 100%;">
+        
+        <!-- Optional: Place your actual Logo here -->
+        <!-- <img src="{{ url_for('static', filename='logo.png') }}" alt="Modulos Logo" style="width: 180px; margin-bottom: 30px;"> -->
+
+        <div class="hero-content">
+            <h1 style="font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-weight: 800; font-size: 3.5rem; line-height: 1.2; margin-bottom: 20px; text-shadow: 0 4px 15px rgba(0,0,0,0.2); color: #ffffff;">
+                Build. <span class="highlight" style="color: #b3d4ff;">Scale.</span> Dominate.
+            </h1>
+            <p style="font-size: 1.2rem; color: #d1e5ff; max-width: 700px; margin: 0 auto 40px; line-height: 1.6;">
+                Your all-in-one digital solutions partner for gaming communities, content creators, and businesses worldwide.
+            </p>
+            
+            <!-- BUTTONS -->
+            <div class="hero-buttons" style="margin-bottom: 60px; display: flex; gap: 16px; justify-content: center; flex-wrap: wrap;">
+                
+                <!-- Primary Button (White BG, Blue Text) -->
+                <a href="{{ url_for('main.services') if 'main.services' in endpoints else '/services' }}" class="btn-primary" style="display: inline-block; background: #ffffff; color: #0047BB !important; text-decoration: none; padding: 15px 40px; border-radius: 50px; font-weight: 700; font-size: 1.1rem; box-shadow: 0 8px 20px rgba(0,0,0,0.2); transition: transform 0.3s ease, box-shadow 0.3s ease;">
+                    Explore Services
+                </a>
+                
+                <!-- Secondary Button -->
+                <a href="{{ url_for('main.contact') if 'main.contact' in endpoints else '/contact' }}" class="btn-secondary" style="display: inline-block; background: transparent; color: #ffffff !important; border: 2px solid #ffffff; text-decoration: none; padding: 13px 40px; border-radius: 50px; font-weight: 700; font-size: 1.1rem; transition: all 0.3s ease;">
+                    Contact Us
+                </a>
+            </div>
+
+            <!-- STATS SECTION -->
+            <div class="stats" style="display: flex; justify-content: center; gap: 50px; flex-wrap: wrap;">
+                <div class="stat-item">
+                    <span class="number" style="display: block; font-size: 2.5rem; font-weight: 800; color: #ffffff;">300+</span>
+                    <span class="label" style="font-size: 1rem; color: #b3d4ff; text-transform: uppercase; letter-spacing: 1px;">Projects</span>
+                </div>
+                <div class="stat-item">
+                    <span class="number" style="display: block; font-size: 2.5rem; font-weight: 800; color: #ffffff;">98%</span>
+                    <span class="label" style="font-size: 1rem; color: #b3d4ff; text-transform: uppercase; letter-spacing: 1px;">Satisfaction</span>
+                </div>
+                <div class="stat-item">
+                    <span class="number" style="display: block; font-size: 2.5rem; font-weight: 800; color: #ffffff;">24/7</span>
+                    <span class="label" style="font-size: 1rem; color: #b3d4ff; text-transform: uppercase; letter-spacing: 1px;">Support</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- SERVICES PREVIEW SECTION (Perfectly Centered Grid) -->
+<section class="services-preview" style="background-color: #f8faff; padding: 80px 0;">
+    <div class="container" style="max-width: 1200px; margin: 0 auto; padding: 0 20px;">
+        <h2 style="text-align: center; font-size: 2.5rem; color: #0047BB; margin-bottom: 60px; font-weight: 800;">
+            Our <span class="highlight" style="color: #0066ff;">Services</span>
+        </h2>
+        
+        <!-- Added class 'services-centered' to fix the alignment -->
+        <div class="service-grid services-centered" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 30px; justify-content: center;">
+            
+            <div class="service-card" style="background: #ffffff; border-radius: 16px; padding: 40px 30px; box-shadow: 0 10px 30px rgba(0, 71, 187, 0.08); text-align: center; transition: transform 0.3s ease, box-shadow 0.3s ease; border-bottom: 4px solid #0066ff;">
+                <div style="width: 70px; height: 70px; background: linear-gradient(135deg, #0047BB, #0066ff); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; color: #ffffff; font-size: 28px; box-shadow: 0 5px 15px rgba(0, 71, 187, 0.3);">
+                    <i class="fas fa-gamepad" aria-hidden="true"></i>
+                </div>
+                <h3 style="color: #0047BB; margin-bottom: 15px; font-size: 1.4rem; font-weight: 700;">Gaming Solutions</h3>
+                <p style="color: #3D5F85; margin-bottom: 25px; line-height: 1.6; font-size: 16px;">Minecraft, FiveM, Rust, ARK, Palworld server setup &amp; optimization.</p>
+                <a href="{{ url_for('main.services') if 'main.services' in endpoints else '/services' }}?category=gaming" style="color: #0066ff; font-weight: 700; text-decoration: none; transition: color 0.3s ease;">Learn More &rarr;</a>
+            </div>
+
+            <div class="service-card" style="background: #ffffff; border-radius: 16px; padding: 40px 30px; box-shadow: 0 10px 30px rgba(0, 71, 187, 0.08); text-align: center; transition: transform 0.3s ease, box-shadow 0.3s ease; border-bottom: 4px solid #0066ff;">
+                <div style="width: 70px; height: 70px; background: linear-gradient(135deg, #0047BB, #0066ff); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; color: #ffffff; font-size: 28px; box-shadow: 0 5px 15px rgba(0, 71, 187, 0.3);">
+                    <i class="fas fa-video" aria-hidden="true"></i>
+                </div>
+                <h3 style="color: #0047BB; margin-bottom: 15px; font-size: 1.4rem; font-weight: 700;">YouTube Production</h3>
+                <p style="color: #3D5F85; margin-bottom: 25px; line-height: 1.6; font-size: 16px;">Video editing, thumbnails, channel branding &amp; SEO optimization.</p>
+                <a href="{{ url_for('main.services') if 'main.services' in endpoints else '/services' }}?category=youtube" style="color: #0066ff; font-weight: 700; text-decoration: none; transition: color 0.3s ease;">Learn More &rarr;</a>
+            </div>
+
+            <div class="service-card" style="background: #ffffff; border-radius: 16px; padding: 40px 30px; box-shadow: 0 10px 30px rgba(0, 71, 187, 0.08); text-align: center; transition: transform 0.3s ease, box-shadow 0.3s ease; border-bottom: 4px solid #0066ff;">
+                <div style="width: 70px; height: 70px; background: linear-gradient(135deg, #0047BB, #0066ff); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; color: #ffffff; font-size: 28px; box-shadow: 0 5px 15px rgba(0, 71, 187, 0.3);">
+                    <i class="fas fa-chart-line" aria-hidden="true"></i>
+                </div>
+                <h3 style="color: #0047BB; margin-bottom: 15px; font-size: 1.4rem; font-weight: 700;">Business Marketing</h3>
+                <p style="color: #3D5F85; margin-bottom: 25px; line-height: 1.6; font-size: 16px;">Websites, SEO, Google Ads, social media &amp; lead generation.</p>
+                <a href="{{ url_for('main.services') if 'main.services' in endpoints else '/services' }}?category=marketing" style="color: #0066ff; font-weight: 700; text-decoration: none; transition: color 0.3s ease;">Learn More &rarr;</a>
+            </div>
+
+            <div class="service-card" style="background: #ffffff; border-radius: 16px; padding: 40px 30px; box-shadow: 0 10px 30px rgba(0, 71, 187, 0.08); text-align: center; transition: transform 0.3s ease, box-shadow 0.3s ease; border-bottom: 4px solid #0066ff;">
+                <div style="width: 70px; height: 70px; background: linear-gradient(135deg, #0047BB, #0066ff); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; color: #ffffff; font-size: 28px; box-shadow: 0 5px 15px rgba(0, 71, 187, 0.3);">
+                    <i class="fas fa-share-alt" aria-hidden="true"></i>
+                </div>
+                <h3 style="color: #0047BB; margin-bottom: 15px; font-size: 1.4rem; font-weight: 700;">Social Media</h3>
+                <p style="color: #3D5F85; margin-bottom: 25px; line-height: 1.6; font-size: 16px;">Management, content creation, community growth &amp; advertising.</p>
+                <a href="{{ url_for('main.services') if 'main.services' in endpoints else '/services' }}?category=social" style="color: #0066ff; font-weight: 700; text-decoration: none; transition: color 0.3s ease;">Learn More &rarr;</a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- AD BANNER SECTION -->
+{% if ad %}
+<section class="ad-banner-section" style="padding: 20px 0; background: #f8faff;">
+    <div class="container">
+        <div class="ad-container" style="max-width: 728px; margin: 0 auto; text-align: center;">
+            <div style="background: white; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.06); border: 1px solid #e6f0ff; overflow: hidden;">
+                <div style="padding: 4px 12px; background: #f0f6ff; border-bottom: 1px solid #e6f0ff; text-align: left; font-size: 10px; color: #8a9bb5; text-transform: uppercase; letter-spacing: 0.5px; display: flex; justify-content: space-between; align-items: center;">
+                    <span><i class="fas fa-ad" style="margin-right: 4px;"></i> Sponsored</span>
+                    <span style="font-size: 9px; color: #b6ceec;">Advertisement</span>
+                </div>
+                <a href="{{ url_for('main.ad_click', ad_id=ad.id) }}" target="_blank" style="display: block; padding: 12px;">
+                    <img src="{{ ad.image_url }}" alt="{{ ad.title }}" style="max-width: 100%; max-height: 100px; border-radius: 6px; display: block; margin: 0 auto; object-fit: contain;">
+                </a>
+                <div style="padding: 6px 12px; border-top: 1px solid #e6f0ff; font-size: 12px; color: #3d5f85; text-align: center;">
+                    {{ ad.title }}
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- INCLUDE POPUP TEMPLATE -->
+{% include "ad_popup.html" %}
+
+<!-- SHOW POPUP IF AVAILABLE -->
+{% if popup_ad %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        setTimeout(function() {
+            showPopup(
+                {{ popup_ad.id }}, 
+                '{{ popup_ad.image_url }}', 
+                '{{ url_for('main.ad_click', ad_id=popup_ad.id) }}',
+                '{{ popup_ad.title }}'
+            );
+        }, 2000);
+    });
+</script>
+{% endif %}
+
+{% endblock %}

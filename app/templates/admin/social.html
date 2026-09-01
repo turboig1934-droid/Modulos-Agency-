@@ -1,0 +1,103 @@
+{% extends "admin/base.html" %}
+
+{% block page_title %}Social Links{% endblock %}
+
+{% block content %}
+<div class="admin-card">
+    <div class="admin-card-header">
+        <h3>🔗 Social Media Links</h3>
+        <span style="color:#3d5f85;">Total: {{ links|length }}</span>
+    </div>
+    <div style="padding:20px;">
+        <!-- Add New Link Form -->
+        <div style="background:#f8faff; padding:20px; border-radius:12px; margin-bottom:20px; border:1px solid #e6f0ff;">
+            <h4 style="margin-bottom:15px; color:#0a3b6b;">➕ Add New Social Link</h4>
+            <form method="POST" action="{{ url_for('admin.add_social') }}" style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+                <input type="text" name="name" placeholder="Name (e.g. YouTube)" required style="flex:1; min-width:120px; padding:10px; border:2px solid #d6e5ff; border-radius:8px;">
+                <input type="text" name="icon" placeholder="Icon (e.g. fab fa-youtube)" required style="flex:1; min-width:150px; padding:10px; border:2px solid #d6e5ff; border-radius:8px;">
+                <input type="url" name="url" placeholder="URL (https://...)" required style="flex:2; min-width:200px; padding:10px; border:2px solid #d6e5ff; border-radius:8px;">
+                <button type="submit" class="btn-primary" style="padding:10px 24px; background:#0a3b6b; color:white; border:none; border-radius:30px; cursor:pointer;">
+                    <i class="fas fa-plus"></i> Add Link
+                </button>
+            </form>
+            <p style="font-size:12px; color:#8a9bb5; margin-top:8px;">
+                <strong>Common Icons:</strong> fab fa-youtube, fab fa-twitter, fab fa-instagram, fab fa-discord, fab fa-github, fab fa-linkedin, fab fa-facebook
+            </p>
+        </div>
+        
+        <!-- Links Table -->
+        <div style="overflow-x:auto;">
+            <table class="admin-table" style="width:100%; border-collapse:collapse;">
+                <thead>
+                    <tr style="background:#f0f4ff;">
+                        <th style="padding:12px 15px; text-align:left;">#</th>
+                        <th style="padding:12px 15px; text-align:left;">Icon</th>
+                        <th style="padding:12px 15px; text-align:left;">Name</th>
+                        <th style="padding:12px 15px; text-align:left;">URL</th>
+                        <th style="padding:12px 15px; text-align:left;">Status</th>
+                        <th style="padding:12px 15px; text-align:left;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for link in links %}
+                    <tr>
+                        <td style="padding:12px 15px;">{{ loop.index }}</td>
+                        <td style="padding:12px 15px;"><i class="{{ link.icon }}" style="font-size:24px; color:#0070e0;"></i></td>
+                        <td style="padding:12px 15px;"><strong>{{ link.name }}</strong></td>
+                        <td style="padding:12px 15px;"><a href="{{ link.url }}" target="_blank" style="color:#0070e0; word-break:break-all;">{{ link.url[:40] }}{% if link.url|length > 40 %}...{% endif %}</a></td>
+                        <td style="padding:12px 15px;">
+                            {% if link.is_active %}
+                                <span style="color:green; font-weight:600;">✅ Active</span>
+                            {% else %}
+                                <span style="color:red; font-weight:600;">❌ Inactive</span>
+                            {% endif %}
+                        </td>
+                        <td style="padding:12px 15px;">
+                            <div style="display:flex; gap:5px; flex-wrap:wrap;">
+                                <a href="{{ url_for('admin.edit_social', id=link.id) }}" class="btn-sm btn-sm-info" style="text-decoration:none; padding:4px 12px; background:#17a2b8; color:white; border-radius:4px; font-size:12px;">Edit</a>
+                                <button onclick="toggleLink({{ link.id }})" class="btn-sm btn-sm-warning" style="padding:4px 12px; background:#ffc107; color:#212529; border:none; border-radius:4px; cursor:pointer; font-size:12px;">Toggle</button>
+                                <button onclick="deleteLink({{ link.id }})" class="btn-sm btn-sm-danger" style="padding:4px 12px; background:#dc3545; color:white; border:none; border-radius:4px; cursor:pointer; font-size:12px;">Delete</button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        {% if not links %}
+            <p style="text-align:center; padding:30px; color:#8a9bb5;">
+                <i class="fas fa-share-alt" style="font-size:40px; display:block; margin-bottom:10px;"></i>
+                No social links added yet. Add your first link above!
+            </p>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+function toggleLink(id) {
+    fetch(`/admin/social/${id}/toggle`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) location.reload();
+    })
+    .catch(error => console.error('Error:', error));
+}
+
+function deleteLink(id) {
+    if (!confirm('Delete this link?')) return;
+    fetch(`/admin/social/${id}/delete`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) location.reload();
+    })
+    .catch(error => console.error('Error:', error));
+}
+</script>
+{% endblock %}

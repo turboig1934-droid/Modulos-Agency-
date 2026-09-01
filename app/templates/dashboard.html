@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Modulos Agency{% endblock %}
+
+{% block content %}
+<!-- Main Dashboard Section with Blue Background -->
+<section class="dashboard" style="min-height: 100vh; background-color: #0047BB; color: #ffffff; padding: 40px 0;">
+    <div class="container" style="max-width: 1200px; margin: 0 auto; padding: 0 20px;">
+        
+        <!-- Dashboard Header -->
+        <div class="dashboard-header" style="text-align: center; margin-bottom: 50px;">
+            <!-- Optional: Place your logo here if it's not in base.html -->
+            <!-- <img src="{{ url_for('static', filename='logo.png') }}" alt="Modulos Logo" style="width: 150px; margin-bottom: 20px;"> -->
+            
+            <h1 style="font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-weight: 600; font-size: 2.5rem; margin-bottom: 10px; text-shadow: 0 4px 10px rgba(0,0,0,0.2);">
+                Welcome, {{ user.full_name }}!
+            </h1>
+            <p style="font-size: 1.1rem; color: #b3d4ff; letter-spacing: 1px; text-transform: uppercase;">
+                Your Modulos Agency Dashboard
+            </p>
+        </div>
+        
+        <!-- Dashboard Grid -->
+        <div class="dashboard-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; margin-bottom: 40px;">
+            
+            <!-- Profile Card -->
+            <div class="dashboard-card" style="background: rgba(255, 255, 255, 0.95); border-radius: 16px; padding: 30px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15); text-align: center; color: #333; transition: transform 0.3s ease, box-shadow 0.3s ease;">
+                <div style="width: 60px; height: 60px; background-color: #e6f0ff; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; font-size: 24px; color: #0047BB;">
+                    <i class="fas fa-user"></i>
+                </div>
+                <h3 style="color: #0047BB; margin-bottom: 15px; font-size: 1.4rem;">Profile</h3>
+                <p style="font-weight: 600; margin-bottom: 5px;">{{ user.full_name }}</p>
+                <p style="color: #666; margin-bottom: 20px;">{{ user.email }}</p>
+                
+                <p class="status" style="display: inline-block; padding: 6px 15px; border-radius: 20px; font-size: 0.9rem; font-weight: 600;
+                    {% if user.is_verified %} background-color: #d4edda; color: #155724; {% else %} background-color: #fff3cd; color: #856404; {% endif %}">
+                    {% if user.is_verified %}✅ Verified{% else %}⚠️ Unverified{% endif %}
+                </p>
+            </div>
+            
+            <!-- Services Card -->
+            <div class="dashboard-card" style="background: rgba(255, 255, 255, 0.95); border-radius: 16px; padding: 30px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15); text-align: center; color: #333; transition: transform 0.3s ease, box-shadow 0.3s ease;">
+                <div style="width: 60px; height: 60px; background-color: #e6f0ff; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; font-size: 24px; color: #0047BB;">
+                    <i class="fas fa-cube"></i>
+                </div>
+                <h3 style="color: #0047BB; margin-bottom: 15px; font-size: 1.4rem;">Services</h3>
+                <p style="color: #666; margin-bottom: 25px;">Explore our services</p>
+                
+                <a href="/services" class="btn-primary" style="display: inline-block; background: linear-gradient(135deg, #0047BB, #0066ff); color: #fff; text-decoration: none; padding: 12px 30px; border-radius: 50px; font-weight: 600; box-shadow: 0 4px 15px rgba(0, 71, 187, 0.4); transition: all 0.3s ease;">
+                    View Services
+                </a>
+            </div>
+            
+            <!-- Support Card -->
+            <div class="dashboard-card" style="background: rgba(255, 255, 255, 0.95); border-radius: 16px; padding: 30px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15); text-align: center; color: #333; transition: transform 0.3s ease, box-shadow 0.3s ease;">
+                <div style="width: 60px; height: 60px; background-color: #e6f0ff; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; font-size: 24px; color: #0047BB;">
+                    <i class="fas fa-envelope"></i>
+                </div>
+                <h3 style="color: #0047BB; margin-bottom: 15px; font-size: 1.4rem;">Support</h3>
+                <p style="color: #666; margin-bottom: 25px;">Need help? Contact us</p>
+                
+                <a href="/contact" class="btn-primary" style="display: inline-block; background: linear-gradient(135deg, #0047BB, #0066ff); color: #fff; text-decoration: none; padding: 12px 30px; border-radius: 50px; font-weight: 600; box-shadow: 0 4px 15px rgba(0, 71, 187, 0.4); transition: all 0.3s ease;">
+                    Contact Support
+                </a>
+            </div>
+        </div>
+        
+        <!-- AD BANNER SECTION -->
+        {% if ad %}
+        <div class="ad-banner-section" style="padding: 20px 0; margin-top: 20px;">
+            <div class="ad-container" style="max-width: 728px; margin: 0 auto; text-align: center;">
+                <div style="background: rgba(255, 255, 255, 0.95); border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); border: 1px solid rgba(255,255,255,0.2); overflow: hidden;">
+                    <div style="padding: 8px 15px; background: rgba(255, 255, 255, 0.6); border-bottom: 1px solid #e6f0ff; text-align: left; font-size: 10px; color: #6e85a6; text-transform: uppercase; letter-spacing: 0.5px; display: flex; justify-content: space-between; align-items: center;">
+                        <span><i class="fas fa-ad" style="margin-right: 4px;"></i> Sponsored</span>
+                        <span style="font-size: 9px; color: #8eaaD0;">Advertisement</span>
+                    </div>
+                    <a href="{{ url_for('main.ad_click', ad_id=ad.id) }}" target="_blank" style="display: block; padding: 12px;">
+                        <img src="{{ ad.image_url }}" alt="{{ ad.title }}" style="max-width: 100%; max-height: 100px; border-radius: 6px; display: block; margin: 0 auto; object-fit: contain;">
+                    </a>
+                    <div style="padding: 8px 15px; border-top: 1px solid #e6f0ff; font-size: 14px; color: #0047BB; font-weight: 600; text-align: center;">
+                        {{ ad.title }}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- Dashboard Actions -->
+        <div class="dashboard-actions" style="text-align: center; margin-top: 40px;">
+            <a href="{{ url_for('auth.logout') }}" class="btn-secondary" style="display: inline-block; background: transparent; color: #ffffff; border: 2px solid rgba(255, 255, 255, 0.6); text-decoration: none; padding: 12px 40px; border-radius: 50px; font-weight: 600; transition: all 0.3s ease;">
+                Logout
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- INCLUDE POPUP TEMPLATE -->
+{% include "ad_popup.html" %}
+
+<!-- SHOW POPUP IF AVAILABLE -->
+{% if popup_ad %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        setTimeout(function() {
+            showPopup(
+                {{ popup_ad.id }}, 
+                '{{ popup_ad.image_url }}', 
+                '{{ url_for('main.ad_click', ad_id=popup_ad.id) }}',
+                '{{ popup_ad.title }}'
+            );
+        }, 2000);
+    });
+</script>
+{% endif %}
+{% endblock %}

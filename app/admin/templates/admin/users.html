@@ -1,0 +1,37 @@
+{% extends "admin/base.html" %}
+
+{% block page_title %}Users{% endblock %}
+
+{% block content %}
+<div class="admin-card">
+    <div class="admin-card-header">
+        <h3>All Users</h3>
+        <span>Total: {{ users|length if users else 0 }}</span>
+    </div>
+    <table class="admin-table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Username</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Status</th>
+                <th>Joined</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for user in users %}
+            <tr>
+                <td><strong>{{ user.full_name }}</strong></td>
+                <td>{{ user.username }}</td>
+                <td>{{ user.email }}</td>
+                <td>{{ user.role.value if user.role else 'User' }}</td>
+                <td>{% if user.is_active %}<span style="color:green;">Active</span>{% else %}<span style="color:red;">Inactive</span>{% endif %}</td>
+                <td>{{ user.created_at.strftime('%d/%m/%Y') }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% if not users %}<p style="text-align:center; padding:20px; color:#8a9bb5;">No users yet.</p>{% endif %}
+</div>
+{% endblock %}

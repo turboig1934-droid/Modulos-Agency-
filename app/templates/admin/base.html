@@ -1,0 +1,75 @@
+cat > app\admin\templates\admin\base.html << 'EOF'
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Modulos Agency</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+</head>
+<body>
+    <div class="admin-wrapper">
+        <aside class="admin-sidebar">
+            <div class="admin-logo">
+                <i class="fas fa-cube"></i>
+                <span>Modulos <span>Admin</span></span>
+            </div>
+            <nav class="admin-nav">
+                <a href="{{ url_for('admin.dashboard') }}" class="{% if request.endpoint == 'admin.dashboard' %}active{% endif %}">
+                    <i class="fas fa-chart-pie"></i> Dashboard
+                </a>
+                <a href="{{ url_for('admin.messages') }}" class="{% if request.endpoint == 'admin.messages' %}active{% endif %}">
+                    <i class="fas fa-envelope"></i> Messages
+                </a>
+                <a href="{{ url_for('admin.ads') }}" class="{% if request.endpoint == 'admin.ads' %}active{% endif %}">
+                    <i class="fas fa-ad"></i> Ads
+                </a>
+                <a href="{{ url_for('admin.navigation') }}" class="{% if request.endpoint == 'admin.navigation' %}active{% endif %}">
+                    <i class="fas fa-bars"></i> Navigation
+                </a>
+                <a href="{{ url_for('admin.users') }}" class="{% if request.endpoint == 'admin.users' %}active{% endif %}">
+                    <i class="fas fa-users"></i> Users
+                </a>
+                <a href="{{ url_for('admin.settings') }}" class="{% if request.endpoint == 'admin.settings' %}active{% endif %}">
+                    <i class="fas fa-cog"></i> Settings
+                </a>
+            </nav>
+            <div class="admin-sidebar-footer">
+                <a href="{{ url_for('main.index') }}" target="_blank">
+                    <i class="fas fa-external-link-alt"></i> View Site
+                </a>
+                <a href="{{ url_for('auth.logout') }}">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </a>
+            </div>
+        </aside>
+
+        <main class="admin-main">
+            <header class="admin-header">
+                <div class="admin-header-left">
+                    <h1>{% block page_title %}Dashboard{% endblock %}</h1>
+                </div>
+                <div class="admin-header-right">
+                    <span>{{ current_user.full_name }}</span>
+                    <a href="{{ url_for('auth.logout') }}">Logout</a>
+                </div>
+            </header>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }}">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <div class="admin-content">
+                {% block content %}{% endblock %}
+            </div>
+        </main>
+    </div>
+</body>
+</html>
+EOF

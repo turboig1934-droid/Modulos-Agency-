@@ -1,0 +1,57 @@
+cat > app\admin\templates\admin\navigation.html << 'EOF'
+{% extends "admin/base.html" %}
+
+{% block page_title %}Navigation{% endblock %}
+
+{% block content %}
+<div class="admin-card">
+    <div class="admin-card-header">
+        <h3>Navigation Items</h3>
+    </div>
+    <table class="admin-table">
+        <thead>
+            <tr>
+                <th>Title</th>
+                <th>URL</th>
+                <th>Order</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in nav_items %}
+            <tr>
+                <td>{{ item.title }}</td>
+                <td>{{ item.url }}</td>
+                <td>{{ item.order }}</td>
+                <td>
+                    {% if item.is_active %}
+                        <span style="color:green;">✅ Active</span>
+                    {% else %}
+                        <span style="color:red;">❌ Inactive</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <button onclick="deleteNav({{ item.id }})" class="btn-sm btn-sm-danger">Delete</button>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<script>
+function deleteNav(id) {
+    if (!confirm('Delete this navigation item?')) return;
+    fetch(`/admin/navigation/${id}/delete`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) location.reload();
+    });
+}
+</script>
+{% endblock %}
+EOF

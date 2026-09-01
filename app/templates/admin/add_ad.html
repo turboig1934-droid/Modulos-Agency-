@@ -1,0 +1,55 @@
+cat > app\admin\templates\admin\add_ad.html << 'EOF'
+{% extends "admin/base.html" %}
+
+{% block page_title %}Add Ad{% endblock %}
+
+{% block content %}
+<div class="admin-card">
+    <div class="admin-card-header">
+        <h3>Add New Ad</h3>
+    </div>
+    <div style="padding:20px;">
+        <form method="POST" class="admin-form">
+            <div class="form-group">
+                <label>Title</label>
+                <input type="text" name="title" required>
+            </div>
+            <div class="form-group">
+                <label>Image URL</label>
+                <input type="url" name="image_url" placeholder="https://example.com/image.png">
+            </div>
+            <div class="form-group">
+                <label>Video URL</label>
+                <input type="url" name="video_url" placeholder="https://example.com/video.mp4">
+            </div>
+            <div class="form-group">
+                <label>Click URL</label>
+                <input type="url" name="click_url" placeholder="https://example.com">
+            </div>
+            <div class="form-group">
+                <label>Ad Type</label>
+                <select name="ad_type">
+                    <option value="image">Image</option>
+                    <option value="video">Video</option>
+                    <option value="banner">Banner</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Position</label>
+                <select name="position">
+                    <option value="sidebar">Sidebar</option>
+                    <option value="banner">Banner</option>
+                    <option value="popup">Popup</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Duration (hours)</label>
+                <input type="number" name="hours" value="24" min="1">
+            </div>
+            <button type="submit" class="btn-primary">Add Ad</button>
+            <a href="{{ url_for('admin.ads') }}" class="btn-secondary">Cancel</a>
+        </form>
+    </div>
+</div>
+{% endblock %}
+EOF

@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+
+{% block title %}Contact Us - Modulos Agency{% endblock %}
+
+{% block content %}
+<section class="page contact-page">
+    <div class="container">
+        <!-- Header -->
+        <div class="contact-header text-center">
+            <h1>Contact <span class="highlight">Us</span></h1>
+            <p class="subtitle">Let's build something extraordinary together.</p>
+        </div>
+        
+        <div class="contact-grid">
+            <!-- Contact Form Card -->
+            <div class="contact-form-card">
+                <form id="contactForm" method="POST" action="{{ url_for('main.contact') }}" class="contact-form">
+                    {# CSRF Token Protection #}
+                    {% if csrf_token is defined %}
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    {% endif %}
+
+                    <!-- Full Name -->
+                    <div class="form-group">
+                        <label for="name">Full Name *</label>
+                        <div class="input-icon-wrapper">
+                            <i class="fas fa-user input-icon" aria-hidden="true"></i>
+                            <input type="text" id="name" name="name" placeholder="Your full name" required>
+                        </div>
+                    </div>
+
+                    <!-- Email Address -->
+                    <div class="form-group">
+                        <label for="email">Email Address *</label>
+                        <div class="input-icon-wrapper">
+                            <i class="fas fa-envelope input-icon" aria-hidden="true"></i>
+                            <input type="email" id="email" name="email" placeholder="you@example.com" required>
+                        </div>
+                    </div>
+
+                    <!-- Subject Field -->
+                    <div class="form-group">
+                        <label for="subject">Subject</label>
+                        <div class="input-icon-wrapper">
+                            <i class="fas fa-tag input-icon" aria-hidden="true"></i>
+                            <input type="text" id="subject" name="subject" placeholder="e.g. Server Optimization Query">
+                        </div>
+                    </div>
+
+                    <!-- Message -->
+                    <div class="form-group">
+                        <label for="message">Message *</label>
+                        <textarea id="message" name="message" rows="5" placeholder="Tell us about your project..." required></textarea>
+                    </div>
+
+                    <button type="submit" id="submitBtn" class="btn-primary btn-full">
+                        <i class="fas fa-paper-plane" aria-hidden="true"></i> Send Message
+                    </button>
+                </form>
+
+                <!-- Success Alert Container (FontAwesome Custom Icon Used) -->
+                <div id="formSuccess" class="alert-success-box" style="display:none;">
+                    <i class="fas fa-check-circle" aria-hidden="true"></i>
+                    <span>Thank you! Your message has been received. We'll get back to you soon.</span>
+                </div>
+            </div>
+            
+            <!-- Contact Info Sidebar -->
+            <div class="contact-info-card">
+                <h3>Get in Touch</h3>
+
+                <div class="info-item">
+                    <i class="fas fa-envelope" aria-hidden="true"></i>
+                    <div>
+                        <strong>Email</strong>
+                        <p><a href="mailto:modulosagency@gmail.com">modulosagency@gmail.com</a></p>
+                    </div>
+                </div>
+
+                <div class="info-item">
+                    <i class="fas fa-clock" aria-hidden="true"></i>
+                    <div>
+                        <strong>Working Hours</strong>
+                        <p>Mon - Sun: 24/7 Support</p>
+                    </div>
+                </div>
+
+                <div class="info-item">
+                    <i class="fas fa-globe" aria-hidden="true"></i>
+                    <div>
+                        <strong>Location</strong>
+                        <p>Available Worldwide</p>
+                    </div>
+                </div>
+
+                <!-- Dynamic Social Links from Admin Panel -->
+                <div class="social-links">
+                    {% if social_links %}
+                        {% for link in social_links %}
+                            <a href="{{ link.url }}" target="_blank" rel="noopener noreferrer" title="{{ link.platform }}">
+                                <i class="{{ link.icon_class }}" aria-hidden="true"></i>
+                            </a>
+                        {% endfor %}
+                    {% else %}
+                        <a href="#" aria-label="YouTube"><i class="fab fa-youtube" aria-hidden="true"></i></a>
+                        <a href="#" aria-label="Twitter"><i class="fab fa-twitter" aria-hidden="true"></i></a>
+                        <a href="#" aria-label="Instagram"><i class="fab fa-instagram" aria-hidden="true"></i></a>
+                        <a href="#" aria-label="Discord"><i class="fab fa-discord" aria-hidden="true"></i></a>
+                        <a href="#" aria-label="GitHub"><i class="fab fa-github" aria-hidden="true"></i></a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Smooth Form Submission using Fetch API (Submits data directly to Flask Database backend)
+document.getElementById('contactForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const form = this;
+    const submitBtn = document.getElementById('submitBtn');
+    const formData = new FormData(form);
+    
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+
+    fetch(form.action, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => {
+        form.style.display = 'none';
+        document.getElementById('formSuccess').style.display = 'flex';
+    })
+    .catch(error => {
+        // Fallback for standard POST submit if needed
+        form.submit();
+    });
+});
+</script>
+{% endblock %}

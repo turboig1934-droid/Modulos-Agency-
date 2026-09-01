@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Modulos Agency</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+</head>
+<body>
+    <div class="admin-wrapper">
+        <!-- Sidebar -->
+        <aside class="admin-sidebar">
+            <div class="admin-logo">
+                <i class="fas fa-cube"></i>
+                <span>Modulos <span>Admin</span></span>
+            </div>
+            <nav class="admin-nav">
+                <a href="{{ url_for('admin.dashboard') }}" class="{% if request.endpoint == 'admin.dashboard' %}active{% endif %}">
+                    <i class="fas fa-chart-pie"></i> Dashboard
+                </a>
+                <a href="{{ url_for('admin.messages') }}" class="{% if request.endpoint == 'admin.messages' %}active{% endif %}">
+                    <i class="fas fa-envelope"></i> Messages
+                    <span class="badge" id="unreadBadge">0</span>
+                </a>
+                <a href="{{ url_for('admin.users') }}" class="{% if request.endpoint == 'admin.users' %}active{% endif %}">
+                    <i class="fas fa-users"></i> Users
+                </a>
+                <a href="{{ url_for('admin.social') }}" class="{% if request.endpoint == 'admin.social' %}active{% endif %}">
+                    <i class="fas fa-share-alt"></i> Social
+                </a>
+                <a href="{{ url_for('admin.settings') }}" class="{% if request.endpoint == 'admin.settings' %}active{% endif %}">
+                    <i class="fas fa-cog"></i> Settings
+                </a>
+            </nav>
+            <div class="admin-sidebar-footer">
+                <a href="{{ url_for('main.index') }}" target="_blank">
+                    <i class="fas fa-external-link-alt"></i> View Site
+                </a>
+                <a href="{{ url_for('auth.logout') }}">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="admin-main">
+            <header class="admin-header">
+                <div class="admin-header-left">
+                    <h1>{% block page_title %}Dashboard{% endblock %}</h1>
+                </div>
+                <div class="admin-header-right">
+                    <span>{{ current_user.full_name }}</span>
+                    <a href="{{ url_for('auth.logout') }}">Logout</a>
+                </div>
+            </header>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }}">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <div class="admin-content">
+                {% block content %}{% endblock %}
+            </div>
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            fetch('/admin/messages/unread-count')
+                .then(response => response.json())
+                .then(data => {
+                    const badge = document.getElementById('unreadBadge');
+                    if (badge && data.unread_count > 0) {
+                        badge.textContent = data.unread_count;
+                        badge.style.display = 'inline';
+                    } else if (badge) {
+                        badge.style.display = 'none';
+                    }
+                })
+                .catch(() => {});
+        });
+    </script>
+</body>
+</html>

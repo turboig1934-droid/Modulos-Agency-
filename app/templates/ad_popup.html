@@ -1,0 +1,84 @@
+<!-- Ad Popup Container -->
+<div id="adPopup" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.65); z-index:9999; justify-content:center; align-items:center; backdrop-filter:blur(6px);">
+    <div style="background:white; border-radius:16px; max-width:600px; width:92%; padding:30px; box-shadow:0 25px 80px rgba(0,0,0,0.4); position:relative; animation:popIn 0.4s ease; max-height:90vh; overflow-y:auto;">
+        
+        <!-- Close Button -->
+        <button onclick="closePopup()" style="position:absolute; top:12px; right:18px; background:rgba(0,0,0,0.05); border:none; font-size:26px; cursor:pointer; color:#8a9bb5; transition:0.3s; width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; line-height:1;">
+            <i class="fas fa-times"></i>
+        </button>
+        
+        <!-- Sponsored Badge -->
+        <div style="text-align:center; margin-bottom:12px;">
+            <span style="background:#f0f6ff; padding:4px 16px; border-radius:20px; font-size:11px; color:#0070e0; text-transform:uppercase; letter-spacing:0.8px; font-weight:600;">
+                <i class="fas fa-ad" style="margin-right:6px;"></i> Sponsored
+            </span>
+        </div>
+        
+        <!-- Ad Content -->
+        <a href="#" id="popupAdLink" target="_blank" style="display:block; text-decoration:none;">
+            <img id="popupAdImage" src="" alt="Advertisement" style="width:100%; max-height:280px; border-radius:10px; object-fit:contain; margin:8px 0; background:#f8faff; padding:5px;">
+        </a>
+        
+        <!-- Ad Title -->
+        <div id="popupAdTitle" style="text-align:center; font-size:14px; color:#3d5f85; margin-top:8px; font-weight:500;"></div>
+        
+        <!-- Continue Button -->
+        <div style="text-align:center; margin-top:16px;">
+            <button onclick="closePopup()" style="background:transparent; border:1.5px solid #d6e5ff; padding:10px 32px; border-radius:30px; cursor:pointer; color:#3d5f85; font-size:14px; font-weight:500; transition:0.3s;">
+                Continue to Site <i class="fas fa-arrow-right" style="margin-left:8px;"></i>
+            </button>
+        </div>
+    </div>
+</div>
+
+<style>
+@keyframes popIn {
+    0% { opacity:0; transform:scale(0.85) translateY(20px); }
+    100% { opacity:1; transform:scale(1) translateY(0); }
+}
+</style>
+
+<script>
+let popupAdId = null;
+
+function showPopup(adId, imageUrl, clickUrl, title) {
+    popupAdId = adId;
+    if (imageUrl) {
+        document.getElementById('popupAdImage').src = imageUrl;
+    }
+    if (clickUrl) {
+        document.getElementById('popupAdLink').href = clickUrl;
+    }
+    if (title) {
+        document.getElementById('popupAdTitle').textContent = title;
+    }
+    document.getElementById('adPopup').style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+}
+
+function closePopup() {
+    document.getElementById('adPopup').style.display = 'none';
+    document.body.style.overflow = 'auto';
+    // Record that user saw the popup
+    if (popupAdId) {
+        fetch(`/ad-view/${popupAdId}`, { method: 'POST' })
+            .then(response => response.json())
+            .then(data => {})
+            .catch(() => {});
+    }
+}
+
+// Close on ESC key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closePopup();
+    }
+});
+
+// Close on outside click
+document.getElementById('adPopup').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closePopup();
+    }
+});
+</script>

@@ -1,0 +1,83 @@
+{% extends "admin/base.html" %}
+
+{% block page_title %}Messages{% endblock %}
+
+{% block content %}
+<div class="admin-card">
+    <div class="admin-card-header">
+        <h3>📧 All Messages</h3>
+        <span style="color:#3d5f85;">Total: {{ messages|length if messages else 0 }}</span>
+    </div>
+    <table class="admin-table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Subject</th>
+                <th>Message</th>
+                <th>Status</th>
+                <th>Date</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if messages %}
+                {% for msg in messages %}
+                <tr>
+                    <td><strong>{{ msg.name }}</strong></td>
+                    <td>{{ msg.email }}</td>
+                    <td>{{ msg.subject or 'No Subject' }}</td>
+                    <td style="max-width:150px; word-wrap:break-word;">{{ msg.message[:30] }}{% if msg.message|length > 30 %}...{% endif %}</td>
+                    <td>
+                        {% if msg.is_read %}
+                            <span style="color:green;">✅ Read</span>
+                        {% else %}
+                            <span style="color:red;">🔴 Unread</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ msg.created_at.strftime('%d/%m/%Y %H:%M') }}</td>
+                    <td>
+                        {% if not msg.is_read %}
+                            <button onclick="markRead({{ msg.id }})" class="btn-sm btn-sm-success">Mark Read</button>
+                        {% endif %}
+                        <button onclick="deleteMessage({{ msg.id }})" class="btn-sm btn-sm-danger">Delete</button>
+                    </td>
+                </tr>
+                {% endfor %}
+            {% else %}
+                <tr>
+                    <td colspan="7" style="text-align:center; padding:40px; color:#8a9bb5;">
+                        <i class="fas fa-inbox" style="font-size:40px; display:block; margin-bottom:10px;"></i>
+                        No messages yet.
+                    </td>
+                </tr>
+            {% endif %}
+        </tbody>
+    </table>
+</div>
+
+<script>
+function markRead(id) {
+    fetch(`/admin/messages/${id}/read`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) location.reload();
+    });
+}
+
+function deleteMessage(id) {
+    if (!confirm('Delete this message?')) return;
+    fetch(`/admin/messages/${id}/delete`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) location.reload();
+    });
+}
+</script>
+{% endblock %}

@@ -1,0 +1,70 @@
+cat > app\admin\templates\admin\ads.html << 'EOF'
+{% extends "admin/base.html" %}
+
+{% block page_title %}Ads Management{% endblock %}
+
+{% block content %}
+<a href="{{ url_for('admin.add_ad') }}" class="btn-primary">+ Add New Ad</a>
+
+<div class="admin-card" style="margin-top:20px;">
+    <table class="admin-table">
+        <thead>
+            <tr>
+                <th>Title</th>
+                <th>Type</th>
+                <th>Position</th>
+                <th>Status</th>
+                <th>Expires</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for ad in ads %}
+            <tr>
+                <td>{{ ad.title }}</td>
+                <td>{{ ad.ad_type }}</td>
+                <td>{{ ad.position }}</td>
+                <td>
+                    {% if ad.is_active and not ad.is_expired() %}
+                        <span style="color:green;">✅ Active</span>
+                    {% else %}
+                        <span style="color:red;">❌ Inactive</span>
+                    {% endif %}
+                </td>
+                <td>{{ ad.expires_at.strftime('%d/%m/%Y') if ad.expires_at else 'Never' }}</td>
+                <td>
+                    <button onclick="toggleAd({{ ad.id }})" class="btn-sm btn-sm-warning">Toggle</button>
+                    <button onclick="deleteAd({{ ad.id }})" class="btn-sm btn-sm-danger">Delete</button>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<script>
+function toggleAd(id) {
+    fetch(`/admin/ads/${id}/toggle`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) location.reload();
+    });
+}
+
+function deleteAd(id) {
+    if (!confirm('Delete this ad?')) return;
+    fetch(`/admin/ads/${id}/delete`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) location.reload();
+    });
+}
+</script>
+{% endblock %}
+EOF

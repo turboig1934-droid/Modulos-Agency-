@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Modulos Agency{% endblock %}</title>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Main Style Sheet -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="container">
+            <a href="{{ url_for('main.index') if 'main.index' in endpoints else '/' }}" class="logo">
+                <img src="{{ url_for('static', filename='images/modulos.logo.png') }}" 
+                     alt="Modulos Agency" 
+                     class="logo-img"
+                     onerror="this.style.display='none';">
+                <span class="logo-text">Modulos<span>Agency</span></span>
+            </a>
+            
+            <div class="nav-links">
+                <a href="{{ url_for('main.index') if 'main.index' in endpoints else '/' }}">Home</a>
+                <a href="{{ url_for('main.about') if 'main.about' in endpoints else '/about' }}">About</a>
+                <a href="{{ url_for('main.services') if 'main.services' in endpoints else '/services' }}">Services</a>
+                <a href="{{ url_for('main.contact') if 'main.contact' in endpoints else '/contact' }}">Contact</a>
+                
+                {% if current_user.is_authenticated %}
+                    {% if current_user.is_admin() %}
+                        <a href="{{ url_for('admin.dashboard') }}" class="btn-primary" style="background:#0070e0;">Admin Panel</a>
+                    {% endif %}
+                    <a href="{{ url_for('main.dashboard') }}">
+                        <i class="fas fa-user"></i> {{ current_user.full_name }}
+                    </a>
+                    <a href="{{ url_for('auth.logout') }}" class="btn-logout">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </a>
+                {% else %}
+                    <a href="{{ url_for('auth.login') }}" class="btn-login">Login</a>
+                    <a href="{{ url_for('auth.register') }}" class="btn-primary">Sign Up</a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <!-- Flash Notifications Container -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="container alert-wrapper">
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">
+                        <span>{{ message }}</span>
+                        <button type="button" class="alert-close" onclick="this.parentElement.remove();">&times;</button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <!-- Main Dynamic Content Block -->
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-grid">
+                <div>
+                    <div class="footer-logo">
+                        <img src="{{ url_for('static', filename='images/modulos.logo.png') }}" 
+                             alt="Modulos Agency" 
+                             class="footer-logo-img"
+                             onerror="this.style.display='none';">
+                        <span class="footer-logo-text">Modulos<span>Agency</span></span>
+                    </div>
+                    <p style="margin-top: 10px; color: #b6ceec;">Build. Scale. Dominate.</p>
+                    <p style="color: #b6ceec;"><i class="fas fa-envelope"></i> modulosagency@gmail.com</p>
+                </div>
+                
+                <div>
+                    <h4>Quick Links</h4>
+                    <a href="{{ url_for('main.index') if 'main.index' in endpoints else '/' }}">Home</a>
+                    <a href="{{ url_for('main.about') if 'main.about' in endpoints else '/about' }}">About</a>
+                    <a href="{{ url_for('main.services') if 'main.services' in endpoints else '/services' }}">Services</a>
+                    <a href="{{ url_for('main.contact') if 'main.contact' in endpoints else '/contact' }}">Contact</a>
+                    {% if current_user.is_authenticated %}
+                        <a href="{{ url_for('main.dashboard') }}">Dashboard</a>
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <h4>Follow Us</h4>
+                    <div class="social-icons-footer">
+                        {% if social_links %}
+                            {% for link in social_links %}
+                                {% if link.is_active %}
+                                    <a href="{{ link.url }}" target="_blank" class="social-icon-item" title="{{ link.name }}">
+                                        <i class="{{ link.icon }}"></i>
+                                    </a>
+                                {% endif %}
+                            {% endfor %}
+                        {% else %}
+                            <p style="color:#b6ceec; font-size:14px;">No social links added</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <p>&copy; 2026 Modulos Agency. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Auto-dismiss Flash Alerts -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const alerts = document.querySelectorAll('.alert');
+            alerts.forEach(function(alert) {
+                setTimeout(function() {
+                    alert.style.transition = 'opacity 0.5s ease';
+                    alert.style.opacity = '0';
+                    setTimeout(function() {
+                        alert.remove();
+                    }, 500);
+                }, 5000);
+            });
+        });
+    </script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

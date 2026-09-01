@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+
+{% block title %}Sign Up - Modulos Agency{% endblock %}
+
+{% block content %}
+<section class="auth-page page">
+    <div class="container">
+        <div class="auth-container">
+            <div class="auth-box">
+                <!-- Header -->
+                <div class="auth-header text-center">
+                    <h2>Create Account</h2>
+                    <p class="subtitle">Join Modulos Agency today</p>
+                </div>
+                
+                <!-- Registration Form -->
+                <form method="POST" action="{{ url_for('auth.register') }}" class="auth-form" onsubmit="return validateRegistrationForm()">
+                    {# CSRF Token Protection #}
+                    {% if csrf_token is defined %}
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    {% endif %}
+
+                    <!-- Full Name -->
+                    <div class="form-group">
+                        <label for="full_name">Full Name</label>
+                        <div class="input-icon-wrapper">
+                            <i class="fas fa-user input-icon" aria-hidden="true"></i>
+                            <input type="text" 
+                                   id="full_name" 
+                                   name="full_name" 
+                                   placeholder="John Doe" 
+                                   autocomplete="name" 
+                                   required>
+                        </div>
+                    </div>
+
+                    <!-- Username -->
+                    <div class="form-group">
+                        <label for="username">Username</label>
+                        <div class="input-icon-wrapper">
+                            <i class="fas fa-at input-icon" aria-hidden="true"></i>
+                            <input type="text" 
+                                   id="username" 
+                                   name="username" 
+                                   placeholder="johndoe" 
+                                   autocomplete="username" 
+                                   required>
+                        </div>
+                    </div>
+                    
+                    <!-- Email Address -->
+                    <div class="form-group">
+                        <label for="email">Email Address</label>
+                        <div class="input-icon-wrapper">
+                            <i class="fas fa-envelope input-icon" aria-hidden="true"></i>
+                            <input type="email" 
+                                   id="email" 
+                                   name="email" 
+                                   placeholder="you@example.com" 
+                                   autocomplete="email" 
+                                   required>
+                        </div>
+                    </div>
+                    
+                    <!-- Password -->
+                    <div class="form-group">
+                        <label for="password">Password</label>
+                        <div class="input-icon-wrapper password-wrapper">
+                            <i class="fas fa-lock input-icon" aria-hidden="true"></i>
+                            <input type="password" 
+                                   id="password" 
+                                   name="password" 
+                                   placeholder="Min 8 characters" 
+                                   autocomplete="new-password" 
+                                   minlength="8" 
+                                   required>
+                            <button type="button" class="toggle-password" onclick="togglePasswordVisibility('password', this)" aria-label="Toggle password visibility">
+                                <i class="fas fa-eye" aria-hidden="true"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Confirm Password -->
+                    <div class="form-group">
+                        <label for="confirm_password">Confirm Password</label>
+                        <div class="input-icon-wrapper password-wrapper">
+                            <i class="fas fa-check-double input-icon" aria-hidden="true"></i>
+                            <input type="password" 
+                                   id="confirm_password" 
+                                   name="confirm_password" 
+                                   placeholder="Confirm your password" 
+                                   autocomplete="new-password" 
+                                   minlength="8" 
+                                   required>
+                            <button type="button" class="toggle-password" onclick="togglePasswordVisibility('confirm_password', this)" aria-label="Toggle password visibility">
+                                <i class="fas fa-eye" aria-hidden="true"></i>
+                            </button>
+                        </div>
+                        <span id="password-match-error" style="color: #e74c3c; font-size: 13px; display: none; margin-top: 4px;">
+                            <i class="fas fa-exclamation-circle"></i> Passwords do not match.
+                        </span>
+                    </div>
+                    
+                    <!-- Google reCAPTCHA Integration -->
+                    {% if config.get('RECAPTCHA_SITE_KEY') %}
+                        <div class="form-group recaptcha-group">
+                            <div class="g-recaptcha" data-sitekey="{{ config.get('RECAPTCHA_SITE_KEY') }}"></div>
+                        </div>
+                    {% endif %}
+                    
+                    <button type="submit" class="btn-primary btn-full">
+                        <i class="fas fa-user-plus" aria-hidden="true"></i> Create Account
+                    </button>
+                </form>
+                
+                <!-- Footer -->
+                <div class="auth-footer text-center">
+                    <p>Already have an account? <a href="{{ url_for('auth.login') }}">Login</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+{% if config.get('RECAPTCHA_SITE_KEY') %}
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+{% endif %}
+<script>
+    function togglePasswordVisibility(inputId, btn) {
+        const input = document.getElementById(inputId);
+        const icon = btn.querySelector('i');
+        if (input.type === 'password') {
+            input.type = 'text';
+            icon.classList.remove('fa-eye');
+            icon.classList.add('fa-eye-slash');
+        } else {
+            input.type = 'password';
+            icon.classList.remove('fa-eye-slash');
+            icon.classList.add('fa-eye');
+        }
+    }
+
+    function validateRegistrationForm() {
+        const pass = document.getElementById('password').value;
+        const confirmPass = document.getElementById('confirm_password').value;
+        const errorSpan = document.getElementById('password-match-error');
+
+        if (pass !== confirmPass) {
+            errorSpan.style.display = 'block';
+            return false;
+        }
+        errorSpan.style.display = 'none';
+        return true;
+    }
+</script>
+{% endblock %}

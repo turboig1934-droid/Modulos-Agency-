@@ -1,0 +1,38 @@
+{% extends "admin/base.html" %}
+
+{% block page_title %}Edit Social Link{% endblock %}
+
+{% block content %}
+<div class="admin-card">
+    <div class="admin-card-header">
+        <h3>✏️ Edit Social Link</h3>
+        <a href="{{ url_for('admin.social') }}" class="btn-secondary" style="padding:6px 16px; text-decoration:none;">← Back</a>
+    </div>
+    <div style="padding:20px;">
+        <form method="POST" action="{{ url_for('admin.update_social', id=link.id) }}" style="max-width:600px;">
+            <div class="form-group">
+                <label>Name</label>
+                <input type="text" name="name" value="{{ link.name }}" required style="width:100%; padding:10px; border:2px solid #d6e5ff; border-radius:8px;">
+            </div>
+            <div class="form-group">
+                <label>Icon Class</label>
+                <input type="text" name="icon" value="{{ link.icon }}" required style="width:100%; padding:10px; border:2px solid #d6e5ff; border-radius:8px;">
+                <p style="font-size:12px; color:#8a9bb5;">Example: fab fa-youtube, fab fa-twitter, fab fa-instagram</p>
+            </div>
+            <div class="form-group">
+                <label>URL</label>
+                <input type="url" name="url" value="{{ link.url }}" required style="width:100%; padding:10px; border:2px solid #d6e5ff; border-radius:8px;">
+            </div>
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" name="is_active" {% if link.is_active %}checked{% endif %}> Active
+                </label>
+            </div>
+            <div style="display:flex; gap:10px; margin-top:20px;">
+                <button type="submit" class="btn-primary">💾 Update Link</button>
+                <a href="{{ url_for('admin.social') }}" class="btn-secondary" style="padding:10px 24px; text-decoration:none;">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,84 @@
+{% extends "admin/base.html" %}
+
+{% block page_title %}Social Links{% endblock %}
+
+{% block content %}
+<div class="admin-card">
+    <div class="admin-card-header">
+        <h3>Social Media Links</h3>
+        <span>Total: {{ links|length if links else 0 }}</span>
+    </div>
+    <div style="padding:20px;">
+        <div style="background:#f8faff; padding:20px; border-radius:12px; margin-bottom:20px;">
+            <h4 style="margin-bottom:15px; color:#0a3b6b;">Add New Social Link</h4>
+            <form method="POST" action="{{ url_for('admin.add_social') }}" style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+                <select name="platform" required style="flex:1.5; min-width:180px; padding:10px; border:2px solid #d6e5ff; border-radius:8px;">
+                    <option value="">Select Platform</option>
+                    <option value="YouTube">YouTube</option>
+                    <option value="Twitter">Twitter</option>
+                    <option value="Instagram">Instagram</option>
+                    <option value="Facebook">Facebook</option>
+                    <option value="Discord">Discord</option>
+                    <option value="GitHub">GitHub</option>
+                    <option value="LinkedIn">LinkedIn</option>
+                    <option value="TikTok">TikTok</option>
+                    <option value="Telegram">Telegram</option>
+                    <option value="WhatsApp">WhatsApp</option>
+                    <option value="Twitch">Twitch</option>
+                    <option value="Reddit">Reddit</option>
+                    <option value="Snapchat">Snapchat</option>
+                    <option value="Pinterest">Pinterest</option>
+                    <option value="Spotify">Spotify</option>
+                    <option value="Tumblr">Tumblr</option>
+                    <option value="Patreon">Patreon</option>
+                </select>
+                <input type="url" name="url" placeholder="URL (https://...)" required style="flex:2; min-width:200px; padding:10px; border:2px solid #d6e5ff; border-radius:8px;">
+                <button type="submit" class="btn-primary" style="padding:10px 24px;">Add Link</button>
+            </form>
+        </div>
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Platform</th>
+                    <th>Icon</th>
+                    <th>URL</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for link in links %}
+                <tr>
+                    <td>{{ loop.index }}</td>
+                    <td><strong>{{ link.name }}</strong></td>
+                    <td><i class="{{ link.icon }}" style="font-size:20px; color:#0070e0;"></i></td>
+                    <td><a href="{{ link.url }}" target="_blank" style="color:#0070e0;">{{ link.url[:30] }}{% if link.url|length > 30 %}...{% endif %}</a></td>
+                    <td>{% if link.is_active %}<span style="color:green;">Active</span>{% else %}<span style="color:red;">Inactive</span>{% endif %}</td>
+                    <td>
+                        <a href="{{ url_for('admin.edit_social', id=link.id) }}" class="btn-sm btn-sm-info">Edit</a>
+                        <button onclick="toggleLink({{ link.id }})" class="btn-sm btn-sm-warning">Toggle</button>
+                        <button onclick="deleteLink({{ link.id }})" class="btn-sm btn-sm-danger">Delete</button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% if not links %}<p style="text-align:center; padding:20px; color:#8a9bb5;">No social links added yet.</p>{% endif %}
+    </div>
+</div>
+
+<script>
+function toggleLink(id) {
+    fetch(`/admin/social/${id}/toggle`, { method: 'POST' })
+        .then(response => response.json())
+        .then(data => { if (data.success) location.reload(); });
+}
+function deleteLink(id) {
+    if (!confirm('Delete this link?')) return;
+    fetch(`/admin/social/${id}/delete`, { method: 'POST' })
+        .then(response => response.json())
+        .then(data => { if (data.success) location.reload(); });
+}
+</script>
+{% endblock %}

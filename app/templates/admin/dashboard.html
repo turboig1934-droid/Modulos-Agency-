@@ -1,0 +1,228 @@
+{% extends "admin/base.html" %}
+
+{% block page_title %}Dashboard{% endblock %}
+
+{% block content %}
+<!-- Stats Cards -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-info">
+            <span class="stat-number">{{ total_users }}</span>
+            <span class="stat-label">Total Users</span>
+        </div>
+        <a href="{{ url_for('admin.users') }}" class="stat-link">Manage Users →</a>
+    </div>
+    <div class="stat-card">
+        <div class="stat-info">
+            <span class="stat-number">{{ total_messages }}</span>
+            <span class="stat-label">Total Messages</span>
+        </div>
+        <a href="{{ url_for('admin.messages') }}" class="stat-link">View Messages →</a>
+    </div>
+    <div class="stat-card">
+        <div class="stat-info">
+            <span class="stat-number">{{ unread_messages }}</span>
+            <span class="stat-label">Unread</span>
+        </div>
+        <a href="{{ url_for('admin.messages') }}" class="stat-link">View Unread →</a>
+    </div>
+    <div class="stat-card">
+        <div class="stat-info">
+            <span class="stat-number">{{ total_ads }}</span>
+            <span class="stat-label">Total Ads</span>
+        </div>
+        <a href="{{ url_for('admin.ads') }}" class="stat-link">Manage Ads →</a>
+    </div>
+    <div class="stat-card">
+        <div class="stat-info">
+            <span class="stat-number">{{ active_ads }}</span>
+            <span class="stat-label">Active Ads</span>
+        </div>
+        <a href="{{ url_for('admin.ads') }}" class="stat-link">View Active →</a>
+    </div>
+</div>
+
+<!-- Quick Action Buttons -->
+<div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:15px; margin-top:30px;">
+    <a href="{{ url_for('admin.messages') }}" class="quick-action" style="background:#0070e0; color:white; padding:20px; border-radius:12px; text-decoration:none; text-align:center; transition:0.3s; box-shadow:0 4px 15px rgba(0,112,224,0.3);">
+        <i class="fas fa-envelope" style="font-size:28px; display:block; margin-bottom:8px;"></i>
+        <span style="font-weight:600;">📬 Messages</span>
+    </a>
+    <a href="{{ url_for('admin.ads') }}" class="quick-action" style="background:#0a3b6b; color:white; padding:20px; border-radius:12px; text-decoration:none; text-align:center; transition:0.3s; box-shadow:0 4px 15px rgba(10,59,107,0.3);">
+        <i class="fas fa-ad" style="font-size:28px; display:block; margin-bottom:8px;"></i>
+        <span style="font-weight:600;">📢 Ads</span>
+    </a>
+    <a href="{{ url_for('admin.users') }}" class="quick-action" style="background:#28a745; color:white; padding:20px; border-radius:12px; text-decoration:none; text-align:center; transition:0.3s; box-shadow:0 4px 15px rgba(40,167,69,0.3);">
+        <i class="fas fa-users" style="font-size:28px; display:block; margin-bottom:8px;"></i>
+        <span style="font-weight:600;">👥 Users</span>
+    </a>
+    <a href="{{ url_for('admin.social') }}" class="quick-action" style="background:#ffc107; color:#212529; padding:20px; border-radius:12px; text-decoration:none; text-align:center; transition:0.3s; box-shadow:0 4px 15px rgba(255,193,7,0.3);">
+        <i class="fas fa-share-alt" style="font-size:28px; display:block; margin-bottom:8px;"></i>
+        <span style="font-weight:600;">🔗 Social</span>
+    </a>
+    <a href="{{ url_for('admin.navigation') }}" class="quick-action" style="background:#17a2b8; color:white; padding:20px; border-radius:12px; text-decoration:none; text-align:center; transition:0.3s; box-shadow:0 4px 15px rgba(23,162,184,0.3);">
+        <i class="fas fa-bars" style="font-size:28px; display:block; margin-bottom:8px;"></i>
+        <span style="font-weight:600;">🧭 Navigation</span>
+    </a>
+    <a href="{{ url_for('admin.settings') }}" class="quick-action" style="background:#6c757d; color:white; padding:20px; border-radius:12px; text-decoration:none; text-align:center; transition:0.3s; box-shadow:0 4px 15px rgba(108,117,125,0.3);">
+        <i class="fas fa-cog" style="font-size:28px; display:block; margin-bottom:8px;"></i>
+        <span style="font-weight:600;">⚙️ Settings</span>
+    </a>
+</div>
+
+<!-- Recent Activity -->
+<div style="display:grid; grid-template-columns:1fr 1fr; gap:30px; margin-top:30px;">
+    <!-- Recent Users -->
+    <div class="admin-card">
+        <div class="admin-card-header">
+            <h3>🆕 Recent Users</h3>
+            <a href="{{ url_for('admin.users') }}">View All</a>
+        </div>
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Joined</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if recent_users %}
+                    {% for user in recent_users %}
+                    <tr>
+                        <td>{{ user.full_name }}</td>
+                        <td>{{ user.created_at.strftime('%d/%m/%Y') }}</td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="2" style="text-align:center; color:#8a9bb5; padding:20px;">No users yet</td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Recent Messages -->
+    <div class="admin-card">
+        <div class="admin-card-header">
+            <h3>📧 Recent Messages</h3>
+            <a href="{{ url_for('admin.messages') }}">View All</a>
+        </div>
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>From</th>
+                    <th>Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if recent_messages %}
+                    {% for msg in recent_messages %}
+                    <tr>
+                        <td>{{ msg.name }}</td>
+                        <td>{{ msg.created_at.strftime('%d/%m/%Y %H:%M') }}</td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="2" style="text-align:center; color:#8a9bb5; padding:20px;">No messages yet</td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<style>
+    .stat-card {
+        background: white;
+        padding: 20px;
+        border-radius: 12px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        text-align: center;
+        position: relative;
+        transition: 0.3s;
+        border-bottom: 4px solid #0070e0;
+    }
+    .stat-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    }
+    .stat-number {
+        font-size: 32px;
+        font-weight: 700;
+        color: #0a3b6b;
+        display: block;
+    }
+    .stat-label {
+        color: #3d5f85;
+        font-size: 14px;
+    }
+    .stat-link {
+        display: inline-block;
+        margin-top: 10px;
+        color: #0070e0;
+        text-decoration: none;
+        font-size: 13px;
+        font-weight: 600;
+    }
+    .stat-link:hover {
+        text-decoration: underline;
+    }
+    .quick-action {
+        transition: 0.3s;
+    }
+    .quick-action:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    }
+    .admin-card {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        overflow: hidden;
+    }
+    .admin-card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 16px 20px;
+        border-bottom: 1px solid #e6f0ff;
+    }
+    .admin-card-header h3 {
+        color: #0a3b6b;
+        margin: 0;
+    }
+    .admin-card-header a {
+        color: #0070e0;
+        text-decoration: none;
+        font-size: 14px;
+    }
+    .admin-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    .admin-table th,
+    .admin-table td {
+        padding: 12px 20px;
+        text-align: left;
+        border-bottom: 1px solid #f0f4ff;
+    }
+    .admin-table th {
+        font-weight: 600;
+        color: #3d5f85;
+        font-size: 13px;
+    }
+    .admin-table td {
+        color: #1f3a5f;
+    }
+    @media (max-width: 768px) {
+        .stats-grid {
+            grid-template-columns: 1fr 1fr;
+        }
+        .quick-action {
+            grid-template-columns: 1fr 1fr;
+        }
+    }
+</style>
+{% endblock %}
