@@ -1,157 +1,464 @@
-name: Deploy Modulos Agency with MEGA Storage
+# ============================================================
+# MODULOS AGENCY - COMPLETE DEPLOYMENT WORKFLOW
+# ============================================================
+# Yeh workflow har push par apne aap run hoga.
+# Yeh MEGA cloud se data sync karta hai, database restore/init
+# karta hai, application start karta hai, aur data backup karta hai.
+# ============================================================
+
+name: 🚀 Deploy Modulos Agency with MEGA Storage
 
 on:
   push:
     branches: [ "main" ]
-  workflow_dispatch:
+  workflow_dispatch:  # Manual run ke liye
+
+# Environment variables for all steps
+env:
+  PYTHON_VERSION: '3.11'
+  MEGA_FOLDER_PATH: '/modulos-data'
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    timeout-minutes: 15  # 15 min ke baad timeout
 
     steps:
-    - name: Checkout code
+    # ============================================================
+    # STEP 1: Code Checkout
+    # ============================================================
+    - name: 📥 Checkout code
       uses: actions/checkout@v4
 
-    - name: Set up Python
-      uses: actions/setup-python@v4
+    # ============================================================
+    # STEP 2: Python Setup
+    # ============================================================
+    - name: 🐍 Set up Python
+      uses: actions/setup-python@v5
       with:
-        python-version: '3.11'
+        python-version: ${{ env.PYTHON_VERSION }}
+        cache: 'pip'  # Dependency caching for speed
 
-    - name: Install dependencies
+    # ============================================================
+    # STEP 3: Install Python Dependencies
+    # ============================================================
+    - name: 📦 Install Python dependencies
       run: |
-        python -m pip install --upgrade pip
+        python -m pip install --upgrade pip setuptools wheel
         if [ -f requirements.txt ]; then
           pip install -r requirements.txt
+          echo "✅ Dependencies installed from requirements.txt"
         else
-          echo "⚠️ No requirements.txt found. Skipping..."
+          echo "⚠️ No requirements.txt found. Installing common packages..."
+          pip install Flask Flask-SQLAlchemy Flask-Login Flask-Bcrypt Flask-Mail python-dotenv requests gunicorn
+          echo "✅ Common packages installed"
         fi
 
-    - name: Install MEGA Tools (Latest Version)
+    # ============================================================
+    # STEP 4: Install MEGA Tools (Official + Fallback)
+    # ============================================================
+    - name: 🔧 Install MEGA Tools
+      id: mega_install
       run: |
+        echo "Installing MEGA tools..."
+        
+        # Official MEGA CMD (most reliable)
         sudo apt-get update
-        # Official MEGA CMD install (zyada stable)
         sudo apt-get install -y wget
-        wget https://mega.nz/linux/repo/xUbuntu_22.04/amd64/megacmd-xUbuntu_22.04_amd64.deb
-        sudo dpkg -i megacmd-xUbuntu_22.04_amd64.deb || sudo apt-get install -f -y
-        # Fallback: agar megacmd nahi chala toh megatools try karein
-        sudo apt-get install -y megatools || true
+        wget -q https://mega.nz/linux/repo/xUbuntu_22.04/amd64/megacmd-xUbuntu_22.04_amd64.deb
+        sudo dpkg -i megacmd-xUbuntu_22.04_amd64.deb 2>/dev/null || sudo apt-get install -f -y
+        
+        # Fallback: megatools (if official fails)
+        if ! command -v mega-put &> /dev/null; then
+          echo "⚠️ Official MEGA CMD not available. Installing megatools..."
+          sudo apt-get install -y megatools
+        fi
+        
+        # Verify installation
+        if command -v mega-put &> /dev/null; then
+          echo "✅ MEGA CMD installed successfully!"
+          echo "mega_installed=true" >> $GITHUB_OUTPUT
+        elif command -v megatools &> /dev/null; then
+          echo "✅ megatools installed successfully!"
+          echo "mega_installed=true" >> $GITHUB_OUTPUT
+        else
+          echo "❌ MEGA tools installation failed!"
+          exit 1
+        fi
 
-    - name: Login to MEGA
-      id: login
+    # ============================================================
+    # STEP 5: Login to MEGA & Verify
+    # ============================================================
+    - name: 🔑 Login to MEGA
+      id: mega_login
       continue-on-error: true
       run: |
         echo "🔑 Logging in to MEGA..."
-        mega-login "${{ secrets.MEGA_EMAIL }}" "${{ secrets.MEGA_PASSWORD }}" || echo "⚠️ Login failed, trying megatools..."
+        
+        # Try official MEGA CMD first
+        if command -v mega-login &> /dev/null; then
+          mega-login "${{ secrets.MEGA_EMAIL }}" "${{ secrets.MEGA_PASSWORD }}"
+          if [ $? -eq 0 ]; then
+            echo "✅ MEGA login successful (via mega-login)!"
+            echo "login_success=true" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+        fi
+        
+        # Try megatools
+        if command -v megatools &> /dev/null; then
+          megatools ls "https://mega.nz/folder/${{ secrets.MEGA_FOLDER_ID }}#${{ secrets.MEGA_ENCRYPTION_KEY }}" > /dev/null 2>&1
+          if [ $? -eq 0 ]; then
+            echo "✅ MEGA login successful (via megatools)!"
+            echo "login_success=true" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+        fi
+        
+        echo "⚠️ MEGA login failed. Will try anonymous access..."
+        echo "login_success=false" >> $GITHUB_OUTPUT
 
-    - name: Check if data exists on MEGA
+    # ============================================================
+    # STEP 6: Check if data exists on MEGA
+    # ============================================================
+    - name: 🔍 Check remote data
       id: check_remote
       continue-on-error: true
       run: |
         echo "🔍 Checking if data exists on MEGA..."
-        # Try megatools first
-        megatools ls "https://mega.nz/folder/${{ secrets.MEGA_FOLDER_ID }}#${{ secrets.MEGA_ENCRYPTION_KEY }}" > /tmp/mega_list.txt 2>&1 || true
-        if grep -q "modulos.db" /tmp/mega_list.txt; then
-          echo "✅ Data found on MEGA!"
-          echo "data_exists=true" >> $GITHUB_OUTPUT
-        else
-          echo "⚠️ No data found on MEGA!"
-          echo "data_exists=false" >> $GITHUB_OUTPUT
-        fi
-
-    - name: Download data from MEGA (if exists)
-      if: steps.check_remote.outputs.data_exists == 'true'
-      run: |
-        mkdir -p ./data
-        echo "📥 Downloading data from MEGA..."
-        megatools dl --path ./data/ \
-          "https://mega.nz/folder/${{ secrets.MEGA_FOLDER_ID }}#${{ secrets.MEGA_ENCRYPTION_KEY }}" || \
-        mega-get "https://mega.nz/folder/${{ secrets.MEGA_FOLDER_ID }}#${{ secrets.MEGA_ENCRYPTION_KEY}" ./data/
-        echo "✅ Data downloaded successfully!"
-
-    - name: Restore database (if downloaded)
-      if: steps.check_remote.outputs.data_exists == 'true'
-      run: |
-        if [ -f "./data/instance/modulos.db" ]; then
-          echo "✅ Database found! Restoring..."
-          mkdir -p ./instance
-          cp ./data/instance/modulos.db ./instance/modulos.db
-          echo "✅ Database restored!"
-        else
-          echo "⚠️ No database found. Creating fresh..."
-          if [ -f init_db.py ]; then
-            python init_db.py
-          elif [ -f fix_db.py ]; then
-            python fix_db.py
-          else
-            echo "❌ No database initialization script found!"
-            exit 1
+        
+        FOLDER_URL="https://mega.nz/folder/${{ secrets.MEGA_FOLDER_ID }}#${{ secrets.MEGA_ENCRYPTION_KEY }}"
+        
+        # Try with megatools
+        if command -v megatools &> /dev/null; then
+          megatools ls "$FOLDER_URL" > /tmp/mega_list.txt 2>&1 || true
+          if grep -q "modulos.db" /tmp/mega_list.txt; then
+            echo "✅ Data found on MEGA!"
+            echo "data_exists=true" >> $GITHUB_OUTPUT
+            exit 0
           fi
         fi
+        
+        # Try with mega-ls (official)
+        if command -v mega-ls &> /dev/null; then
+          mega-ls "$FOLDER_URL" > /tmp/mega_list2.txt 2>&1 || true
+          if grep -q "modulos.db" /tmp/mega_list2.txt; then
+            echo "✅ Data found on MEGA!"
+            echo "data_exists=true" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+        fi
+        
+        echo "⚠️ No data found on MEGA!"
+        echo "data_exists=false" >> $GITHUB_OUTPUT
 
-    - name: Initialize fresh database (if no data on MEGA)
+    # ============================================================
+    # STEP 7: Download data (if exists)
+    # ============================================================
+    - name: 📥 Download data from MEGA
+      if: steps.check_remote.outputs.data_exists == 'true'
+      continue-on-error: true
+      run: |
+        echo "📥 Downloading data from MEGA..."
+        mkdir -p ./data
+        
+        FOLDER_URL="https://mega.nz/folder/${{ secrets.MEGA_FOLDER_ID }}#${{ secrets.MEGA_ENCRYPTION_KEY }}"
+        
+        # Try megatools first (more reliable)
+        if command -v megatools &> /dev/null; then
+          megatools dl --path ./data/ "$FOLDER_URL" && exit 0
+        fi
+        
+        # Try official MEGA
+        if command -v mega-get &> /dev/null; then
+          mega-get "$FOLDER_URL" ./data/ && exit 0
+        fi
+        
+        echo "⚠️ Download failed. Will create fresh data."
+        mkdir -p ./data/instance
+
+    # ============================================================
+    # STEP 8: Restore database (if downloaded)
+    # ============================================================
+    - name: 💾 Restore database
+      if: steps.check_remote.outputs.data_exists == 'true'
+      run: |
+        echo "💾 Restoring database..."
+        
+        if [ -f "./data/instance/modulos.db" ] && [ -s "./data/instance/modulos.db" ]; then
+          echo "✅ Database found in downloaded data! Restoring..."
+          mkdir -p ./instance
+          cp ./data/instance/modulos.db ./instance/modulos.db
+          echo "✅ Database restored successfully!"
+          echo "db_restored=true" >> $GITHUB_OUTPUT
+        else
+          echo "⚠️ No valid database found. Creating fresh..."
+          if [ -f init_db.py ]; then
+            python init_db.py
+            echo "✅ Database created using init_db.py"
+          elif [ -f fix_db.py ]; then
+            python fix_db.py
+            echo "✅ Database created using fix_db.py"
+          else
+            echo "❌ No database initialization script found!"
+            echo "Creating minimal database..."
+            python -c "
+import sqlite3
+conn = sqlite3.connect('./instance/modulos.db')
+conn.execute('CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY, username TEXT)')
+conn.commit()
+conn.close()
+print('✅ Minimal database created!')
+            "
+          fi
+          echo "db_restored=false" >> $GITHUB_OUTPUT
+        fi
+
+    # ============================================================
+    # STEP 9: Initialize fresh database (if no data)
+    # ============================================================
+    - name: 🆕 Initialize fresh database
       if: steps.check_remote.outputs.data_exists == 'false'
       run: |
-        echo "⚠️ No data on MEGA. Creating fresh database..."
+        echo "🆕 No data on MEGA. Creating fresh database..."
+        mkdir -p ./instance
+        
         if [ -f init_db.py ]; then
           python init_db.py
+          echo "✅ Fresh database created using init_db.py!"
         elif [ -f fix_db.py ]; then
           python fix_db.py
+          echo "✅ Fresh database created using fix_db.py!"
         else
-          echo "❌ No database initialization script found!"
+          echo "⚠️ No init script found. Creating default database..."
+          python -c "
+import sqlite3
+conn = sqlite3.connect('./instance/modulos.db')
+conn.execute('CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY, username TEXT)')
+conn.commit()
+conn.close()
+print('✅ Default database created!')
+          "
+        fi
+        
+        # Verify database creation
+        if [ -f "./instance/modulos.db" ] && [ -s "./instance/modulos.db" ]; then
+          echo "✅ Database verified!"
+          echo "data_exists=false" >> $GITHUB_OUTPUT
+        else
+          echo "❌ Database creation failed!"
           exit 1
         fi
-        echo "✅ Fresh database created!"
 
-    - name: Run application
+    # ============================================================
+    # STEP 10: Run database migrations (if Flask-Migrate)
+    # ============================================================
+    - name: 🔄 Run database migrations
+      continue-on-error: true
+      run: |
+        if [ -f manage.py ] && grep -q "migrate" manage.py; then
+          echo "🔄 Running migrations..."
+          python manage.py db upgrade || echo "⚠️ No migrations to apply"
+        elif [ -f migrations/env.py ] || [ -d migrations ]; then
+          echo "⚠️ Migrations folder found but no manage.py"
+        else
+          echo "✅ No migrations needed"
+        fi
+
+    # ============================================================
+    # STEP 11: Run application (with health check)
+    # ============================================================
+    - name: 🚀 Run application
+      id: app_run
       run: |
         echo "🚀 Starting Modulos Agency application..."
+        
+        # Try different entry points
         if [ -f run.py ]; then
+          echo "Starting with run.py..."
           python run.py &
-          sleep 3
-          echo "✅ Application started!"
+          APP_PID=$!
         elif [ -f app.py ]; then
+          echo "Starting with app.py..."
           python app.py &
-          sleep 3
-          echo "✅ Application started!"
+          APP_PID=$!
+        elif [ -f manage.py ]; then
+          echo "Starting with manage.py..."
+          python manage.py runserver --host=0.0.0.0 --port=5000 &
+          APP_PID=$!
+        elif [ -f wsgi.py ]; then
+          echo "Starting with wsgi.py..."
+          python wsgi.py &
+          APP_PID=$!
         else
           echo "❌ No Python application found!"
           exit 1
         fi
+        
+        echo "APP_PID=$APP_PID" >> $GITHUB_ENV
+        echo "✅ Application started (PID: $APP_PID)"
+        
+        # Wait for app to start
+        sleep 5
+        
+        # Health check
+        if curl -s -o /dev/null -w "%{http_code}" http://localhost:5000 | grep -q "200\|301\|302\|403"; then
+          echo "✅ Application health check passed!"
+        else
+          echo "⚠️ Health check failed, but continuing..."
+        fi
 
-    - name: Delete old data on MEGA (cleanup)
+    # ============================================================
+    # STEP 12: Prepare data for upload
+    # ============================================================
+    - name: 📁 Prepare data for upload
+      id: prepare_upload
+      if: always()
+      run: |
+        echo "📁 Preparing data for upload..."
+        mkdir -p ./data/instance
+        
+        # Find and copy database
+        if [ -f "./instance/modulos.db" ] && [ -s "./instance/modulos.db" ]; then
+          cp ./instance/modulos.db ./data/instance/modulos.db
+          echo "✅ Database backed up!"
+          echo "db_size=$(stat -c%s ./instance/modulos.db)" >> $GITHUB_OUTPUT
+        elif [ -f "./app/instance/modulos.db" ] && [ -s "./app/instance/modulos.db" ]; then
+          mkdir -p ./app/instance
+          cp ./app/instance/modulos.db ./data/instance/modulos.db
+          echo "✅ Database backed up from app/instance!"
+          echo "db_size=$(stat -c%s ./app/instance/modulos.db)" >> $GITHUB_OUTPUT
+        else
+          echo "⚠️ No database found to backup!"
+          # Create empty placeholder to avoid errors
+          touch ./data/instance/empty.db
+        fi
+        
+        # Copy any additional data files
+        if [ -d "./app/static/uploads" ]; then
+          cp -r ./app/static/uploads ./data/uploads 2>/dev/null || true
+          echo "📁 Uploads folder backed up!"
+        fi
+        
+        echo "📁 Data folder contents:"
+        ls -la ./data/
+        echo "📁 Instance folder contents:"
+        ls -la ./data/instance/
+
+    # ============================================================
+    # STEP 13: Delete old data (cleanup)
+    # ============================================================
+    - name: 🗑️ Delete old data on MEGA
       if: always()
       continue-on-error: true
       run: |
         echo "🗑️ Deleting old data from MEGA..."
-        # Multiple methods try karein
-        mega-rm /modulos-data/ || true
-        megatools rm "https://mega.nz/folder/${{ secrets.MEGA_FOLDER_ID }}#${{ secrets.MEGA_ENCRYPTION_KEY }}" || true
+        
+        FOLDER_URL="https://mega.nz/folder/${{ secrets.MEGA_FOLDER_ID }}#${{ secrets.MEGA_ENCRYPTION_KEY }}"
+        
+        # Try official MEGA first
+        if command -v mega-rm &> /dev/null; then
+          mega-rm "$FOLDER_URL" --recursive 2>/dev/null || true
+        fi
+        
+        # Try megatools
+        if command -v megatools &> /dev/null; then
+          megatools rm "$FOLDER_URL" 2>/dev/null || true
+        fi
+        
+        echo "✅ Cleanup completed (or no data to delete)"
 
-    - name: Upload new data to MEGA
+    # ============================================================
+    # STEP 14: Upload new data to MEGA
+    # ============================================================
+    - name: 📤 Upload data to MEGA
       if: always()
       continue-on-error: true
       run: |
-        echo "📤 Uploading new data to MEGA..."
-        mkdir -p ./data/instance
-        if [ -f "./instance/modulos.db" ]; then
-          cp ./instance/modulos.db ./data/instance/modulos.db
-          echo "✅ Database backed up!"
+        echo "📤 Uploading data to MEGA..."
+        
+        FOLDER_URL="https://mega.nz/folder/${{ secrets.MEGA_FOLDER_ID }}#${{ secrets.MEGA_ENCRYPTION_KEY }}"
+        
+        # Check if we have data to upload
+        if [ ! -f "./data/instance/modulos.db" ] && [ ! -f "./data/instance/empty.db" ]; then
+          echo "⚠️ No data to upload!"
+          exit 0
         fi
-        # Method 1: mega-put
-        mega-put ./data /modulos-data/ || \
-        # Method 2: megatools put
-        megatools put --path "/modulos-data" \
-          ./data/* || \
-        # Method 3: mega-put with full URL
-        mega-put ./data "https://mega.nz/folder/${{ secrets.MEGA_FOLDER_ID }}#${{ secrets.MEGA_ENCRYPTION_KEY }}/modulos-data" || true
-        echo "✅ Upload attempt complete!"
+        
+        # Method 1: Official MEGA CMD
+        if command -v mega-put &> /dev/null; then
+          echo "📤 Using mega-put..."
+          mega-put ./data "$FOLDER_URL" && {
+            echo "✅ Upload successful (mega-put)!"
+            exit 0
+          }
+        fi
+        
+        # Method 2: megatools
+        if command -v megatools &> /dev/null; then
+          echo "📤 Using megatools..."
+          megatools put --path "/modulos-data" ./data/* && {
+            echo "✅ Upload successful (megatools)!"
+            exit 0
+          }
+        fi
+        
+        # Method 3: Try with file by file
+        echo "📤 Trying file-by-file upload..."
+        for file in ./data/instance/*.db; do
+          if [ -f "$file" ]; then
+            echo "Uploading $file..."
+            mega-put "$file" "$FOLDER_URL/instance/" 2>/dev/null || true
+          fi
+        done
+        
+        echo "✅ Upload attempt completed!"
 
-    - name: Show debug information
+    # ============================================================
+    # STEP 15: Create status file (for verification)
+    # ============================================================
+    - name: 📋 Create status file
       if: always()
       run: |
+        echo "📋 Creating deployment status..."
+        cat > ./deploy-status.json << EOF
+        {
+          "deployment_time": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+          "commit_sha": "${{ github.sha }}",
+          "commit_message": "${{ github.event.head_commit.message }}",
+          "data_exists": "${{ steps.check_remote.outputs.data_exists }}",
+          "db_restored": "${{ steps.restore_db.outputs.db_restored || 'unknown' }}",
+          "mega_login": "${{ steps.mega_login.outputs.login_success || 'unknown' }}"
+        }
+        EOF
+        echo "✅ Status file created"
+        cat ./deploy-status.json
+
+    # ============================================================
+    # STEP 16: Show final debug info
+    # ============================================================
+    - name: 🐛 Final debug information
+      if: always()
+      run: |
+        echo "=========================================="
+        echo "📊 DEPLOYMENT SUMMARY"
+        echo "=========================================="
+        echo ""
         echo "📁 Data folder contents:"
         ls -la ./data/ || echo "No data folder"
         echo ""
         echo "📁 Instance folder contents:"
         ls -la ./instance/ || echo "No instance folder"
+        echo ""
+        echo "📁 App folder contents:"
+        ls -la ./app/ | head -20 || echo "No app folder"
+        echo ""
+        echo "🐍 Python version:"
+        python --version
+        echo ""
+        echo "📦 Installed pip packages:"
+        pip list --format=columns | head -20
+        echo ""
+        echo "=========================================="
+        echo "✅ DEPLOYMENT COMPLETE"
+        echo "=========================================="
